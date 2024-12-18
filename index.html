@@ -241,8 +241,8 @@
 				window.addEventListener( 'resize', onWindowResize );
 
 				// stats
-				stats = new Stats();
-				container.appendChild( stats.dom );
+				// stats = new Stats();
+				// container.appendChild( stats.dom );
 
 				
 				controls = new OrbitControls( camera, renderer.domElement );
@@ -658,7 +658,7 @@
 
 				renderer.render( scene, camera );
 				controls.update();
-				stats.update();
+				// stats.update();
 
 			}
 
