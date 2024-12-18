@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - skinning and morphing</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+
+		<style>
+			html, body {
+				width: 100%;
+				height: 100%;
+				padding: 0;
+				margin: 0;
+				overflow: hidden;
+			}
+			body {
+				color: #222;
+			}
+			#wrapper {
+				position: absolute;
+				bottom: 20px;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+			button {
+				font-size: 30px;
+				padding: 20px 30px;
+				border-radius: 5px;
+				border: 1px solid #333;
+				box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+				
+				visibility: visible;
+				opacity: 1;
+				transition: opacity 0.3s, visibility 0.3s;
+			}
+
+			.hide {
+				
+				visibility: hidden;
+				opacity: 0;
+				transition: opacity 0.3s, visibility 0.3s;
+				
+			}
+		</style>
+	</head>
+
+	<body>
+		
+		<div id="wrapper">
+			<button id="btn_select" class="hide">GO</button>
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+			import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+			import Stats from 'three/addons/libs/stats.module.js';
+			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+			let container, stats, clock, gui;
+			let camera, scene, renderer, controls;
+			let sLight, dirLight, hemiLight, lightHelper;
+
+			let modelGroup = [], kujiList = [];
+
+			const api = { state: 'Standing' };
+
+			const btnSelect = document.getElementById('btn_select');
+			
+			const states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Sitting', 'Standing', 'Death' ];
+			const emotes = [ 'Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
+
+			const initPos = [
+				{x: 0, z: 0, rot: 0},
+				{x: 10, z: -20, rot: 45},
+				{x: 15, z: -2, rot: 15},
+				{x: -18, z: -7, rot: -45},
+				{x: -10, z: -2, rot: -15},
+				{x: -12, z: -17, rot: -15},
+				{x: -2, z: -7, rot: -35},
+				{x: -8, z: -27, rot: -145},
+				{x: -7, z: 7, rot: 45},
+				{x: 7, z: 2, rot: 145},
+				{x: 12, z: -12, rot: 105},
+				{x: 3, z: 8, rot: 35},
+				{x: 6, z: -8, rot: -35},
+				{x: -3, z: -18, rot: -70},
+			];
+
+			const nameList = [
+				'HWANG1',
+				'HWANG2',
+				'HWANG3',
+				'HWANG4',
+				'HWANG5',
+				'HWANG6',
+				'HWANG7',
+				'HWANG8',
+				'HWANG9',
+				'HWANG10',
+				'HWANG11',
+				'HWANG12',
+				'HWANG13',
+				'HWANG14',
+			];
+			THREE.Cache.enabled = true;
+
+			let duration = 1;
+			let ease = 'power3.out';
+
+			const cameraInitPos = new THREE.Vector3(0, 20, 30);
+			const cameraInitLookAt = new THREE.Vector3(0, 2, 0);
+			
+			init();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 100 );
+				camera.position.set( 0, 2000, 300 );
+				// camera.position.set( - 5, 3, 10 );
+				camera.lookAt( cameraInitLookAt );
+
+
+				gsap.to( camera.position, {
+					duration: 4,
+					ease: ease,
+					x: cameraInitPos.x,
+					y: cameraInitPos.y,
+					z: cameraInitPos.z,
+					onUpdate: function() {
+						// camera.lookAt( 0, 2, 0 );
+						// controls.target = new THREE.Vector3(0, 2, 0);
+						// controls.update();
+
+					},
+					onComplete: function() {
+						btnSelect.classList.remove('hide')
+					}, delay: 0.0
+				} );
+
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xe0e0e0 );
+				scene.fog = new THREE.Fog( 0xe0e0e0, 0, 100 );
+
+				clock = new THREE.Clock();
+
+				// lights
+				// (色, 光の強さ, 距離, 照射角, ボケ具合, 減衰率)
+				sLight = new THREE.SpotLight( 0xFFFFFF, 60, 125, Math.PI / 16, 0.25, 1 );
+				sLight.castShadow = true;
+				sLight.intensity = 0;
+				// sLight.target(initPos);
+				scene.add( sLight );
+				scene.add( sLight.target );
+
+				// lightHelper = new THREE.SpotLightHelper(sLight);
+				// scene.add(lightHelper);
+
+				hemiLight = new THREE.HemisphereLight( 0xffffff, 0x8d8d8d, 3 );
+				hemiLight.position.set( 0, 20, 0 );
+				scene.add( hemiLight );
+
+				dirLight = new THREE.DirectionalLight( 0xffffff, 3 );
+				// const dirLight = new THREE.SpotLight( 0xffffff, 3 );
+				dirLight.position.set( 0, 20, 10 );
+				dirLight.castShadow = true; 
+				dirLight.shadow.camera.right = 120;
+				dirLight.shadow.camera.left = -120;
+				dirLight.shadow.camera.top = -120;
+				dirLight.shadow.camera.bottom = 120;
+				dirLight.shadow.mapSize.width = 1024;
+				dirLight.shadow.mapSize.height = 1024;
+				dirLight.shadow.camera.near = 0.5; // default
+				dirLight.shadow.camera.far = 500; // default
+				scene.add( dirLight );
+
+				// dirLight.shadow.mapSize.width = 512; // default
+				// dirLight.shadow.mapSize.height = 512; // default
+				// dirLight.shadow.camera.near = 0.5; // default
+				// dirLight.shadow.camera.far = 500; // default
+
+				// ground
+				const mesh = new THREE.Mesh( 
+					new THREE.BoxGeometry( 500, 500, 0.01 ), 
+					new THREE.MeshPhysicalMaterial( { color: 0xcbcbcb, roughness: 0, depthWrite: true } ) 
+				);
+				// mesh.position.z -= 10;
+				mesh.rotation.x = - Math.PI / 2;
+				mesh.receiveShadow = true;
+				scene.add( mesh );
+
+				const grid = new THREE.GridHelper( 200, 40, 0x000000, 0x000000 );
+				grid.material.opacity = 0.1;
+				grid.material.transparent = true;
+				scene.add( grid );
+
+
+				// model
+				
+
+				
+				for ( let i = 0; i < initPos.length; i ++ ) {
+					loadModel(i);	
+				}
+				
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+				container.appendChild( renderer.domElement );
+
+				window.addEventListener( 'resize', onWindowResize );
+
+				// stats
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.enableDamping = true;
+				controls.autoRotate  =true;
+				// controls.autoRotateSpeed = 20;
+				controls.maxPolarAngle = Math.PI * 80 / 180;
+				// controls.maxAzimuthAngle = 0;
+				// controls.update();
+
+				
+				btnSelect.status = 1;
+
+				let currentIdx = -1;
+
+				let timeStamp = 0;
+				btnSelect.addEventListener('click', (e)=>{
+					if ( new Date() * 1 - timeStamp < 1000 ) {
+						return;
+					}
+					if ( btnSelect.status === 1 ) {
+						currentIdx = kujiList[parseInt( Math.random() * kujiList.length )];
+						selectedKuji(currentIdx);
+					}
+					else if ( btnSelect.status === 2 ) {
+						returnView(currentIdx);
+					}
+
+					timeStamp = new Date() * 1;
+				})
+
+			}
+
+
+
+			function returnView(selectedIdx) {
+
+				btnSelect.classList.add('hide');
+				controls.autoRotate  = true;
+
+				let model = modelGroup[selectedIdx];
+				model.status = 'dead';
+
+				clearTimeout(model.interval);
+
+				model.activeAction = model.actions[ states[6] ];
+				model.action = model.actions[ states[6] ];
+				model.action.loop = THREE.LoopOnce;
+				model.action.play();
+				// console.log(model.actions[ states[6] ], THREE.LoopOnce);
+				// fadeToAction(states[6], 0.2, model);
+
+				gsap.to(sLight, {
+					intensity: 0,
+					duration: duration,
+					ease: ease
+				})
+				
+				gsap.to(dirLight, {
+						intensity: 3,
+						duration: duration,
+						ease: ease,
+						onUpdate: function() {
+							hemiLight.intensity = dirLight.intensity
+						}
+					})
+
+					
+					gsap.to(scene.background, {
+						r: 0.8, g: 0.8, b: 0.8,
+						duration: duration,
+						ease: ease,
+						onUpdate: function() {
+							scene.fog.color = scene.background;
+						}
+					})
+				
+
+				gsap.to( camera.position, {
+						duration: duration,
+						ease: ease,
+						x: cameraInitPos.x,
+						y: cameraInitPos.y,
+						z: cameraInitPos.z,
+						onUpdate: function() {
+							camera.lookAt( cameraInitLookAt );
+							controls.target = cameraInitLookAt;
+
+						},
+						onComplete: function() {
+							
+							btnSelect.classList.remove('hide');
+							btnSelect.textContent = 'GO';
+							btnSelect.status = 1;
+						},
+						delay: 0.5
+					} );
+			}
+
+
+			function selectedKuji( selectedIdx ) {
+
+				let killIdx = kujiList.indexOf(selectedIdx);
+				if ( killIdx > -1 ) {
+					kujiList.splice(killIdx, 1);
+				}
+
+				btnSelect.classList.add('hide');
+
+					controls.autoRotate  = false;
+
+
+					let model = modelGroup[selectedIdx];
+
+					model.status = 'showing';
+
+					
+					// sLight.position = sLight.position + modelGroup[0].position - modelGroup[selectedIdx].position;
+					
+					
+					changeSpotLightPosition(selectedIdx);
+					
+					
+					gsap.to(scene.background, {
+						r: 0, g: 0, b: 0,
+						duration: duration,
+						ease: ease,
+						onUpdate: function() {
+							scene.fog.color = scene.background;
+						}
+					})
+
+					gsap.to(sLight, {
+						intensity: 160,
+						duration: duration,
+						ease: ease
+					})
+					gsap.to(dirLight, {
+						intensity: 0.03,
+						duration: duration,
+						ease: ease,
+						onUpdate: function() {
+							hemiLight.intensity = dirLight.intensity
+						}
+					})
+					
+					
+
+					var aabb = new THREE.Box3().setFromObject( model );
+					var center = aabb.getCenter( new THREE.Vector3() );
+					var size = aabb.getSize( new THREE.Vector3() );
+
+							// controls.update();
+					gsap.to( camera.position, {
+						duration: duration,
+						ease: ease,
+						x: center.x,
+						y: center.y,
+						z: center.z + size.z + 6, // maybe adding even more offset depending on your model
+						onUpdate: function() {
+							camera.lookAt( center );
+							
+							controls.target = center;
+							// controls.update();
+
+						},
+						onComplete: function() {
+							fadeToAction(emotes[parseInt(Math.random() * emotes.length - 1)], 0.5, model);
+							setTimeout(function(){
+								fadeToAction(emotes[5], 0.5, model);
+
+								gsap.to(model.title.rotation, {
+									z: Math.PI / 2,
+									duration: 0.4,
+									onComplete: function() {
+										model.title_index.visible = false;
+										model.title_name.visible = true;
+										gsap.to(model.title.rotation, {
+											z: Math.PI,
+											duration: 0.4
+										})
+									}
+									})
+							}, 2000)
+							// setTimeout(function(){
+							// 	fadeToAction(actionName, 0.5, model);
+							// })
+							
+							setTimeout(function(){
+								btnSelect.classList.remove('hide');
+							}, 3000)
+								btnSelect.textContent = 'RETURN';
+								btnSelect.status = 2;
+						}
+					} );
+
+					gsap.to( model.rotation, {
+						duration: duration,
+						ease: ease,
+						y: 0
+					});
+			}
+
+
+
+			function changeSpotLightPosition(idx) {
+				let model = modelGroup[idx];
+				sLight.position.set(model.position.x, 30, model.position.z + 20)
+				sLight.target = model;
+			}
+
+
+
+			function loadModel(idx) {
+
+				const loader = new GLTFLoader();
+				loader.load( 'models/gltf/RobotExpressive/RobotExpressive.glb', function ( gltf ) {
+
+					const model = gltf.scene;
+					model.traverse( function( node ) {
+
+						if ( node.isMesh ) { node.castShadow = true; node.receiveShadow  = true; }
+
+					} );
+
+
+					model.getObjectByName( 'Head_4' ).visible = false;
+
+					const geometry = new THREE.PlaneGeometry( 0.02, 0.02 );
+					const material = new THREE.MeshPhysicalMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+					const plane = new THREE.Mesh( geometry, material );
+					plane.rotation.x = Math.PI * 90 / 180;
+					plane.position.y = -0.015;
+					model.getObjectByName( 'Head_3' ).add( plane );
+
+					const fontLoader = new FontLoader();
+					fontLoader.load( 'fonts/optimer_bold.typeface.json', function ( response ) {
+
+						model.title = new THREE.Object3D();
+
+						model.title_index = getTextMesh(response, (idx + 1).toString(), false);
+						model.title_name = getTextMesh(response, nameList[idx], true);
+						model.title.add( model.title_index );
+						model.title.add( model.title_name );
+						
+						model.getObjectByName( 'Head_3' ).add(model.title)
+
+					} );
+
+					
+
+
+
+
+					const mixer = new THREE.AnimationMixer( model );
+					modelGroup.push(model);
+					kujiList.push(idx);
+					scene.add( model );
+
+					model.idx = idx;
+					model.mixer = mixer;
+
+					model.position.set(
+						initPos[idx].x,
+						0,
+						initPos[idx].z
+					);
+					model.rotation.y = Math.PI * initPos[idx].rot / 180;
+					
+
+					model.actions = {};
+
+					for ( let i = 0; i < gltf.animations.length; i ++ ) {
+
+						const clip = gltf.animations[ i ];
+						const action = mixer.clipAction( clip );
+						model.actions[ clip.name ] = action;
+
+						if ( emotes.indexOf( clip.name ) >= 0 || states.indexOf( clip.name ) >= 4 ) {
+
+							action.clampWhenFinished = true;
+							action.loop = THREE.LoopOnce;
+
+						}
+					}
+
+
+					model.activeAction = model.actions[ api.state ];
+					model.activeAction.play();
+
+						
+					model.interval = setTimeout(randAnimation, 1000 * Math.random());
+
+					function randAnimation() {
+						
+						if ( !model.status ) {
+
+							let rand = parseInt( Math.random() * 10);
+							let type = parseInt( Math.random() * 4);
+
+							if ( rand < 8 ) {
+								fadeToAction(states[type], 0.5, model);
+							}
+						}
+						else if ( model.status === 'showing' ) {
+
+						}
+						else if ( model.status === 'dead' ) {
+							clearTimeout(model.interval);
+
+						}
+
+
+						if ( model.status !== 'daed' ) {
+							model.interval = setTimeout(randAnimation, 10000 * Math.random());
+						}
+					}
+
+
+					
+
+				}, undefined, function ( e ) {
+
+					console.error( e );
+
+				} );
+			}
+
+
+			function getTextMesh(response, title, reverse) {
+				const textGeo = new TextGeometry( title, {
+
+					font: response,
+
+					size: 0.005,
+					depth: 0.001,
+					curveSegments: 0.01,
+
+					bevelThickness: 0.01,
+					bevelSize: 0.0,
+					bevelEnabled: false
+
+				} );
+
+				textGeo.computeBoundingBox();
+
+				var centerOffset = - 0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+
+
+				const materials = [
+					new THREE.MeshPhongMaterial( { color: 0xFF6600, flatShading: true } ), // front
+					new THREE.MeshPhongMaterial( { color: 0xFF6600 } ) // side
+				];
+				const textMesh1 = new THREE.Mesh( textGeo, materials );
+				textMesh1.rotation.x = Math.PI * 90 / 180;
+				
+				if ( reverse === true ) {
+					textMesh1.position.x = -centerOffset;
+					textMesh1.rotation.y = Math.PI;
+					textMesh1.visible = false;
+				}
+				else {
+					textMesh1.position.x = centerOffset;
+				}
+				textMesh1.position.z = 0.015;
+
+				return textMesh1;
+			}
+
+
+
+			function fadeToAction( name, duration, model ) {
+
+				model.previousAction = model.activeAction;
+				model.activeAction = model.actions[ name ];
+
+				if ( model.previousAction !== model.activeAction ) {
+
+					model.previousAction.fadeOut( duration );
+
+				}
+
+				model.activeAction
+					.reset()
+					.setEffectiveTimeScale( 1 )
+					.setEffectiveWeight( 1 )
+					.fadeIn( duration )
+					.play();
+
+			}
+
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			//
+
+			function animate() {
+
+				const dt = clock.getDelta();
+
+				if ( modelGroup && modelGroup.length > 0 ) {
+					for ( let i = 0, len = modelGroup.length; i < len; i ++ ){
+						modelGroup[i].mixer.update(dt);
+					}
+				}
+
+				renderer.render( scene, camera );
+				controls.update();
+				stats.update();
+
+			}
+
+		</script>
+
+	</body>
+</html>
