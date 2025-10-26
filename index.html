@@ -7,7 +7,7 @@
 		<meta name="description" content="Interactive 3D lottery application built with Three.js">
 		<meta name="author" content="siriz">
 		<link type="text/css" rel="stylesheet" href="main.css">
-		<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+		<script src="libs/gsap.min.js"></script>
 
 
 		<style>
@@ -93,6 +93,21 @@
 			<button id="btn_select" class="hide">GO</button>
 		</div>
 
+		<!-- Stats Display -->
+		<div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; color: white; font-family: Arial; z-index: 100;">
+			<h3 style="margin: 0 0 10px 0; font-size: 1.2em;">📊 진행 상황</h3>
+			<p style="margin: 5px 0;">총 캐릭터: <strong id="stats-total">0</strong>명</p>
+			<p style="margin: 5px 0;">선택됨: <strong id="stats-selected">0</strong>명</p>
+			<p style="margin: 5px 0;">남은 캐릭터: <strong id="stats-remaining">0</strong>명</p>
+			<button id="btn_back" style="margin-top: 10px; width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em;">
+				⬅️ 입력 화면으로
+			</button>
+		</div>
+
+		<!-- Scripts -->
+		<script src="js/storage.js"></script>
+		<script src="js/utils.js"></script>
+
 		<script type="importmap">
 			{
 				"imports": {
@@ -135,41 +150,22 @@
 			const states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Sitting', 'Standing', 'Death' ];
 			const emotes = [ 'Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
 
-			// ===== Character Initial Positions =====
-			const initPos = [
-				{x: 0, z: 0, rot: 0},
-				{x: 10, z: -20, rot: 45},
-				{x: 15, z: -2, rot: 15},
-				{x: -18, z: -7, rot: -45},
-				{x: -10, z: -2, rot: -15},
-				{x: -12, z: -17, rot: -15},
-				{x: -2, z: -7, rot: -35},
-				{x: -8, z: -27, rot: -145},
-				{x: -7, z: 7, rot: 45},
-				{x: 7, z: 2, rot: 145},
-				{x: 12, z: -12, rot: 105},
-				{x: 3, z: 8, rot: 35},
-				{x: 6, z: -8, rot: -35},
-				{x: -3, z: -18, rot: -70},
-			];
+			// ===== Load Characters from localStorage =====
+			let characters = StorageManager.getUnselectedCharacters();
+			
+			// If no characters found, redirect to input page
+			if (characters.length === 0) {
+				alert('캐릭터가 없습니다. 먼저 캐릭터를 추가해주세요.');
+				window.location.href = 'input.html';
+			}
 
-			// ===== Character Names =====
-			const nameList = [
-				'HWANG1',
-				'HWANG2',
-				'HWANG3',
-				'HWANG4',
-				'HWANG5',
-				'HWANG6',
-				'HWANG7',
-				'HWANG8',
-				'HWANG9',
-				'HWANG10',
-				'HWANG11',
-				'HWANG12',
-				'HWANG13',
-				'HWANG14',
-			];
+			// Shuffle characters for random placement
+			characters = StorageManager.shuffleArray(characters);
+
+			// ===== Generate positions with collision detection =====
+			const initPos = Utils.generatePositions(characters.length, 3, 50);
+			
+			console.log(`✅ ${characters.length}명의 캐릭터 배치 준비 완료`);
 			
 			// ===== Configuration =====
 			THREE.Cache.enabled = true;
@@ -258,7 +254,7 @@
 				scene.add( grid );
 
 				// ===== Load Models =====
-				for ( let i = 0; i < initPos.length; i ++ ) {
+				for ( let i = 0; i < characters.length; i ++ ) {
 					loadModel(i);	
 				}
 
@@ -302,6 +298,36 @@
 
 					timeStamp = new Date() * 1;
 				})
+
+				// ===== Back Button Event =====
+				document.getElementById('btn_back').addEventListener('click', () => {
+					if (confirm('입력 화면으로 돌아가시겠습니까?')) {
+						window.location.href = 'input.html';
+					}
+				});
+
+				// ===== Update Statistics =====
+				updateStatistics();
+			}
+
+			/**
+			 * Update statistics display
+			 */
+			function updateStatistics() {
+				const stats = StorageManager.getStatistics();
+				document.getElementById('stats-total').textContent = stats.total;
+				document.getElementById('stats-selected').textContent = stats.selected;
+				document.getElementById('stats-remaining').textContent = stats.remaining;
+
+				// Check if all characters are selected
+				if (stats.isComplete) {
+					setTimeout(() => {
+						if (confirm('🎉 모든 캐릭터를 선택했습니다!\n\n다시 시작하시겠습니까?')) {
+							StorageManager.resetSelections(true);
+							window.location.reload();
+						}
+					}, 2000);
+				}
 			}
 
 			/**
@@ -365,6 +391,7 @@
 						btnSelect.classList.remove('hide');
 						btnSelect.textContent = 'GO';
 						btnSelect.status = 1;
+						updateStatistics(); // Update stats after returning
 					},
 					delay: 0.5
 				} );
@@ -386,6 +413,13 @@
 
 				let model = modelGroup[selectedIdx];
 				model.status = 'showing';
+
+				// Save selection to localStorage
+				if (model.characterId) {
+					StorageManager.selectCharacter(model.characterId);
+					console.log(`✅ 캐릭터 선택 저장: ${characters[selectedIdx].name}`);
+					updateStatistics(); // Update stats after selection
+				}
 
 				// Focus spotlight on selected character
 				changeSpotLightPosition(selectedIdx);
@@ -516,7 +550,7 @@
 					fontLoader.load( 'fonts/optimer_bold.typeface.json', function ( response ) {
 						model.title = new THREE.Object3D();
 						model.title_index = getTextMesh(response, (idx + 1).toString(), false);
-						model.title_name = getTextMesh(response, nameList[idx], true);
+						model.title_name = getTextMesh(response, characters[idx].name, true);
 						model.title.add( model.title_index );
 						model.title.add( model.title_name );
 						model.getObjectByName( 'Head_3' ).add(model.title)
@@ -529,6 +563,7 @@
 					scene.add( model );
 
 					model.idx = idx;
+					model.characterId = characters[idx].id; // Store character ID for saving selection
 					model.mixer = mixer;
 
 					// Set initial position and rotation
@@ -537,7 +572,7 @@
 						0,
 						initPos[idx].z
 					);
-					model.rotation.y = Math.PI * initPos[idx].rot / 180;
+					model.rotation.y = Math.PI * initPos[idx].rotation / 180;
 
 					// Setup animations
 					model.actions = {};
