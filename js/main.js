@@ -36,7 +36,7 @@ let characters = StorageManager.getUnselectedCharacters();
 // If no characters found, redirect to input page
 if (characters.length === 0) {
 	alert('캐릭터가 없습니다. 먼저 캐릭터를 추가해주세요.');
-	window.location.href = 'input.html';
+	window.location.href = 'index.html';
 }
 
 // Shuffle characters for random placement
@@ -182,7 +182,7 @@ function init() {
 	// ===== Back Button Event =====
 	document.getElementById('btn_back').addEventListener('click', () => {
 		if (confirm('입력 화면으로 돌아가시겠습니까?')) {
-			window.location.href = 'input.html';
+			window.location.href = 'index.html';
 		}
 	});
 

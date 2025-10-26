@@ -43,7 +43,7 @@ An interactive 3D lottery application built with Three.js and GSAP, featuring an
 
 ## 🎮 How to Use
 
-### Step 1: Add Characters (`input.html`)
+### Step 1: Add Characters (`index.html`)
 
 Choose one of three input methods:
 
@@ -53,7 +53,7 @@ Choose one of three input methods:
 
 Each character gets a unique robot avatar from DiceBear. You can edit names or delete characters before starting.
 
-### Step 2: Start the Lottery (`index.html`)
+### Step 2: Start the Lottery (`select.html`)
 
 1. Click **"배치 시작하기"** (Start) to proceed to the 3D scene
 2. Characters are randomly arranged in a circular pattern
@@ -117,29 +117,34 @@ npx http-server
 
 3. Open your browser and navigate to:
 ```
-http://localhost:8000/input.html
+http://localhost:8000
 ```
 
 ## 📁 Project Structure
 
 ```
 kujikuji/
-├── input.html          # Character input screen
-├── index.html          # Main 3D lottery scene
-├── main.css           # Global stylesheet
+├── index.html          # Character input screen (entry point)
+├── select.html         # Main 3D lottery selection scene
+├── css/
+│   ├── main.css       # Global stylesheet
+│   └── select.css     # Select page specific styles
 ├── js/
+│   ├── main.js        # Main 3D scene logic
 │   ├── storage.js     # LocalStorage data management
 │   ├── utils.js       # Utility functions (positioning, collision detection)
 │   └── particles.js   # Particle effect system
 ├── libs/
-│   └── gsap.min.js    # GSAP animation library (local)
-├── build/             # Three.js library files
-│   └── three.module.js
-├── jsm/               # Three.js addons and utilities
-│   ├── controls/      # OrbitControls
-│   ├── loaders/       # GLTFLoader, FontLoader
-│   ├── geometries/    # TextGeometry
-│   └── libs/          # Stats, GUI
+│   ├── gsap/
+│   │   └── gsap.min.js    # GSAP animation library (local)
+│   └── threejs/       # Three.js library files
+│       ├── build/
+│       │   └── three.module.js
+│       └── jsm/       # Three.js addons and utilities
+│           ├── controls/      # OrbitControls
+│           ├── loaders/       # GLTFLoader, FontLoader
+│           ├── geometries/    # TextGeometry
+│           └── libs/          # Stats, GUI
 ├── models/            # 3D model files
 │   └── gltf/
 │       └── RobotExpressive/
@@ -161,7 +166,7 @@ kujikuji/
 
 ### Adding Your Own Character Names
 
-1. Open `input.html`
+1. Open `index.html`
 2. Use any of the three input methods
 3. Characters are automatically saved to localStorage
 

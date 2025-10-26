@@ -1,48 +1,741 @@
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>KUJIKUJI | Interactive 3D Lottery</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<meta name="description" content="Interactive 3D lottery application built with Three.js">
-		<meta name="author" content="siriz">
-		<link type="text/css" rel="stylesheet" href="css/main.css">
-		<link type="text/css" rel="stylesheet" href="css/index.css">
-		<script src="libs/gsap/gsap.min.js"></script>
-	</head>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUJIKUJI - 캐릭터 입력</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        /* ===== Input Page Specific Styles ===== */
+        .input-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-	<body>
-		
-		<div id="wrapper">
-			<button id="btn_select" class="hide">GO</button>
-		</div>
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
 
-		<!-- Stats Display -->
-		<div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; color: white; font-family: Arial; z-index: 100;">
-			<h3 style="margin: 0 0 10px 0; font-size: 1.2em;">📊 진행 상황</h3>
-			<p style="margin: 5px 0;">총 캐릭터: <strong id="stats-total">0</strong>명</p>
-			<p style="margin: 5px 0;">선택됨: <strong id="stats-selected">0</strong>명</p>
-			<p style="margin: 5px 0;">남은 캐릭터: <strong id="stats-remaining">0</strong>명</p>
-			<button id="btn_back" style="margin-top: 10px; width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em;">
-				⬅️ 입력 화면으로
-			</button>
-		</div>
+        .header h1 {
+            font-size: 3em;
+            margin: 0;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
 
-		<!-- Scripts -->
-		<script src="js/storage.js"></script>
-		<script src="js/utils.js"></script>
-		<script src="js/particles.js"></script>
+        .header p {
+            margin: 10px 0 0 0;
+            color: #ccc;
+            font-size: 1.1em;
+        }
 
-		<script type="importmap">
-			{
-				"imports": {
-					"three": "./libs/threejs/build/three.module.js",
-					"three/addons/": "./libs/threejs/jsm/"
-				}
-			}
-		</script>
+        /* ===== Tab Navigation ===== */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
 
-		<script type="module" src="js/main.js"></script>
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
 
-	</body>
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom-color: #4a9eff;
+        }
+
+        /* ===== Tab Content ===== */
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== Number Input Mode ===== */
+        .number-input-group {
+            text-align: center;
+        }
+
+        .number-input-group label {
+            display: block;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .number-input-group input[type="number"] {
+            width: 200px;
+            padding: 15px;
+            font-size: 1.5em;
+            text-align: center;
+            border: 2px solid #4a9eff;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .number-input-group input[type="number"]:focus {
+            outline: none;
+            border-color: #6bb3ff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .generate-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            background: #4a9eff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .generate-btn:hover {
+            background: #6bb3ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(74, 158, 255, 0.3);
+        }
+
+        /* ===== Text Input Mode ===== */
+        .text-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .text-input-group label {
+            font-size: 1.1em;
+            color: #fff;
+        }
+
+        .text-input-group textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            font-size: 1em;
+            font-family: inherit;
+            border: 2px solid #4a9eff;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            resize: vertical;
+        }
+
+        .text-input-group textarea:focus {
+            outline: none;
+            border-color: #6bb3ff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .text-input-group .hint {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        /* ===== Manual Add Mode ===== */
+        .manual-add-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .add-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .add-form input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            font-size: 1em;
+            border: 2px solid #4a9eff;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .add-form input[type="text"]:focus {
+            outline: none;
+            border-color: #6bb3ff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .add-btn {
+            padding: 12px 24px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            background: #34ce57;
+            transform: scale(1.05);
+        }
+
+        /* ===== Character List ===== */
+        .character-list {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .character-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .character-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .character-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #fff;
+            padding: 5px;
+        }
+
+        .character-name {
+            flex: 1;
+            font-size: 1.1em;
+            color: #fff;
+        }
+
+        .character-name input {
+            width: 100%;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #4a9eff;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        .character-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .edit-btn {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .edit-btn:hover {
+            background: #ffcd38;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .delete-btn:hover {
+            background: #e4606d;
+        }
+
+        .save-btn {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .save-btn:hover {
+            background: #34ce57;
+        }
+
+        /* ===== Bottom Actions ===== */
+        .bottom-actions {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .statistics {
+            flex: 1;
+            padding: 15px;
+            background: rgba(74, 158, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        .statistics h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+        }
+
+        .statistics p {
+            margin: 5px 0;
+            font-size: 1em;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .start-btn, .reset-btn, .export-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reset-btn {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .reset-btn:hover {
+            background: #e4606d;
+        }
+
+        .export-btn {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .export-btn:hover {
+            background: #7d868f;
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .input-container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .tab-button {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+
+            .tab-content {
+                padding: 20px 15px;
+            }
+
+            .number-input-group input[type="number"] {
+                width: 150px;
+                font-size: 1.2em;
+            }
+
+            .bottom-actions {
+                flex-direction: column;
+            }
+
+            .statistics {
+                order: 1;
+            }
+
+            .action-buttons {
+                order: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="input-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎲 KUJIKUJI</h1>
+            <p>캐릭터를 입력하고 랜덤 뽑기를 시작하세요!</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-button active" data-tab="number">숫자로 생성</button>
+            <button class="tab-button" data-tab="text">텍스트 붙여넣기</button>
+            <button class="tab-button" data-tab="manual">직접 추가</button>
+        </div>
+
+        <!-- Tab 1: Number Input -->
+        <div class="tab-content active" id="tab-number">
+            <div class="number-input-group">
+                <label for="characterCount">생성할 캐릭터 수를 입력하세요</label>
+                <input type="number" id="characterCount" min="1" max="50" value="5" />
+                <button class="generate-btn" id="generateBtn">캐릭터 생성</button>
+            </div>
+        </div>
+
+        <!-- Tab 2: Text Input -->
+        <div class="tab-content" id="tab-text">
+            <div class="text-input-group">
+                <label for="characterText">캐릭터 이름을 한 줄에 하나씩 입력하세요</label>
+                <textarea id="characterText" placeholder="User 1&#10;User 2&#10;User 3&#10;..."></textarea>
+                <p class="hint">💡 팁: 엑셀이나 메모장에서 복사해서 붙여넣을 수 있습니다.</p>
+                <button class="generate-btn" id="parseTextBtn">캐릭터 추가</button>
+            </div>
+        </div>
+
+        <!-- Tab 3: Manual Add -->
+        <div class="tab-content" id="tab-manual">
+            <div class="manual-add-group">
+                <div class="add-form">
+                    <input type="text" id="manualName" placeholder="캐릭터 이름 입력" />
+                    <button class="add-btn" id="addManualBtn">+ 추가</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Character List -->
+        <div class="character-list" id="characterList">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                </svg>
+                <p>아직 추가된 캐릭터가 없습니다.</p>
+                <p>위의 방법 중 하나를 선택해서 캐릭터를 추가해주세요.</p>
+            </div>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="bottom-actions">
+            <div class="statistics">
+                <h3>📊 현재 상태</h3>
+                <p>총 캐릭터: <strong id="totalCount">0</strong>명</p>
+                <p>선택됨: <strong id="selectedCount">0</strong>명</p>
+                <p>남은 캐릭터: <strong id="remainingCount">0</strong>명</p>
+            </div>
+            <div class="action-buttons">
+                <button class="start-btn" id="startBtn" disabled>배치 시작하기</button>
+                <button class="reset-btn" id="resetBtn">전체 초기화</button>
+                <button class="export-btn" id="exportBtn">데이터 내보내기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        // ===== Initialize =====
+        let editingCharacterId = null;
+
+        // Load existing data
+        loadCharacters();
+        updateStatistics();
+
+        // ===== Tab Switching =====
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+            });
+        });
+
+        // ===== Number Input Mode =====
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            const count = parseInt(document.getElementById('characterCount').value);
+            if (count > 0 && count <= 50) {
+                StorageManager.generateCharacters(count);
+                loadCharacters();
+                updateStatistics();
+                showNotification(`✅ ${count}명의 캐릭터가 생성되었습니다!`);
+            } else {
+                showNotification('⚠️ 1~50 사이의 숫자를 입력해주세요.', 'warning');
+            }
+        });
+
+        // ===== Text Input Mode =====
+        document.getElementById('parseTextBtn').addEventListener('click', () => {
+            const text = document.getElementById('characterText').value;
+            const names = text.split('\n').filter(name => name.trim());
+            
+            if (names.length > 0) {
+                StorageManager.addCharacters(names);
+                document.getElementById('characterText').value = '';
+                loadCharacters();
+                updateStatistics();
+                showNotification(`✅ ${names.length}명의 캐릭터가 추가되었습니다!`);
+            } else {
+                showNotification('⚠️ 최소 1명 이상의 이름을 입력해주세요.', 'warning');
+            }
+        });
+
+        // ===== Manual Add Mode =====
+        const manualNameInput = document.getElementById('manualName');
+        document.getElementById('addManualBtn').addEventListener('click', addManualCharacter);
+        
+        manualNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addManualCharacter();
+            }
+        });
+
+        function addManualCharacter() {
+            const name = manualNameInput.value.trim();
+            if (name) {
+                StorageManager.addCharacter(name);
+                manualNameInput.value = '';
+                loadCharacters();
+                updateStatistics();
+                showNotification(`✅ "${name}" 캐릭터가 추가되었습니다!`);
+            } else {
+                showNotification('⚠️ 이름을 입력해주세요.', 'warning');
+            }
+        }
+
+        // ===== Character List =====
+        function loadCharacters() {
+            const characters = StorageManager.getAllCharacters();
+            const listContainer = document.getElementById('characterList');
+            
+            if (characters.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                        </svg>
+                        <p>아직 추가된 캐릭터가 없습니다.</p>
+                        <p>위의 방법 중 하나를 선택해서 캐릭터를 추가해주세요.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = characters.map(char => `
+                <div class="character-item" data-id="${char.id}">
+                    <img class="character-avatar" 
+                         src="${StorageManager.getAvatarUrl(char.avatarSeed)}" 
+                         alt="${char.name}" />
+                    <div class="character-name">
+                        <span class="name-display">${char.name}</span>
+                        <input type="text" class="name-edit" value="${char.name}" style="display:none;" />
+                    </div>
+                    ${char.selected ? '<span style="color: #28a745;">✓ 선택됨</span>' : ''}
+                    <div class="character-actions">
+                        <button class="edit-btn" onclick="editCharacter('${char.id}')">수정</button>
+                        <button class="delete-btn" onclick="deleteCharacter('${char.id}')">삭제</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editCharacter(id) {
+            const item = document.querySelector(`[data-id="${id}"]`);
+            const display = item.querySelector('.name-display');
+            const input = item.querySelector('.name-edit');
+            const editBtn = item.querySelector('.edit-btn');
+
+            if (editingCharacterId === id) {
+                // Save
+                const newName = input.value.trim();
+                if (newName) {
+                    StorageManager.updateCharacter(id, { name: newName });
+                    display.textContent = newName;
+                    display.style.display = 'inline';
+                    input.style.display = 'none';
+                    editBtn.textContent = '수정';
+                    editBtn.classList.remove('save-btn');
+                    editBtn.classList.add('edit-btn');
+                    editingCharacterId = null;
+                    showNotification('✅ 이름이 수정되었습니다!');
+                }
+            } else {
+                // Edit mode
+                display.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                input.select();
+                editBtn.textContent = '저장';
+                editBtn.classList.remove('edit-btn');
+                editBtn.classList.add('save-btn');
+                editingCharacterId = id;
+            }
+        }
+
+        function deleteCharacter(id) {
+            if (confirm('정말 이 캐릭터를 삭제하시겠습니까?')) {
+                StorageManager.deleteCharacter(id);
+                loadCharacters();
+                updateStatistics();
+                showNotification('✅ 캐릭터가 삭제되었습니다.');
+            }
+        }
+
+        // ===== Statistics =====
+        function updateStatistics() {
+            const stats = StorageManager.getStatistics();
+            document.getElementById('totalCount').textContent = stats.total;
+            document.getElementById('selectedCount').textContent = stats.selected;
+            document.getElementById('remainingCount').textContent = stats.remaining;
+            
+            // Enable/disable start button
+            const startBtn = document.getElementById('startBtn');
+            if (stats.total > 0) {
+                startBtn.disabled = false;
+            } else {
+                startBtn.disabled = true;
+            }
+        }
+
+        // ===== Bottom Actions =====
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const stats = StorageManager.getStatistics();
+            if (stats.total > 0) {
+                window.location.href = 'select.html';
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('⚠️ 모든 데이터가 삭제됩니다. 계속하시겠습니까?')) {
+                StorageManager.clearAll();
+                loadCharacters();
+                updateStatistics();
+                showNotification('✅ 모든 데이터가 초기화되었습니다.');
+            }
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const data = StorageManager.exportData();
+            const filename = `kujikuji-backup-${new Date().toISOString().split('T')[0]}.json`;
+            Utils.downloadFile(data, filename);
+            showNotification('✅ 데이터가 다운로드되었습니다.');
+        });
+
+        // ===== Notification =====
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: ${type === 'success' ? '#28a745' : '#ffc107'};
+                color: ${type === 'success' ? '#fff' : '#000'};
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // ===== Animations =====
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
 </html>
