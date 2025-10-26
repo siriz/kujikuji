@@ -107,6 +107,7 @@
 		<!-- Scripts -->
 		<script src="js/storage.js"></script>
 		<script src="js/utils.js"></script>
+		<script src="js/particles.js"></script>
 
 		<script type="importmap">
 			{
@@ -468,6 +469,10 @@
 						controls.target = center;
 					},
 					onComplete: function() {
+						// Create particle effect at character position
+						const particlePos = new THREE.Vector3(center.x, center.y, center.z);
+						ParticleEffects.createCombinedEffect(scene, particlePos);
+						
 						// Play random emote
 						fadeToAction(emotes[parseInt(Math.random() * emotes.length - 1)], 0.5, model);
 						

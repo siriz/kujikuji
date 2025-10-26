@@ -1,6 +1,6 @@
 # 🎲 KUJIKUJI - Interactive 3D Lottery
 
-An interactive 3D lottery application built with Three.js and GSAP, featuring animated robot characters with smooth camera transitions and dramatic lighting effects.
+An interactive 3D lottery application built with Three.js and GSAP, featuring animated robot characters with smooth camera transitions, dramatic lighting effects, and particle animations.
 
 ![KUJIKUJI Demo](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white)
 ![GSAP](https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=white)
@@ -8,36 +8,84 @@ An interactive 3D lottery application built with Three.js and GSAP, featuring an
 
 ## ✨ Features
 
-- **14 Animated Robot Characters** - Each with unique positions and random animations
-- **Smooth 3D Transitions** - Camera movements powered by GSAP for cinematic effects
-- **Dynamic Lighting** - Spotlight effects that focus on selected characters
-- **Interactive Selection** - Click to randomly select a character with dramatic reveal
-- **Character Animations** - Multiple animation states including idle, walking, dancing, and emotes
-- **Name Tag System** - Flipping name cards with index numbers and custom names
-- **Responsive Design** - Works across different screen sizes
-- **Auto-Rotation** - Camera automatically rotates for a dynamic view
+### Character Management
+- **Flexible Input System** - Three ways to add characters:
+  - Number-based auto-generation
+  - Text paste (line-by-line parsing)
+  - Manual individual addition
+- **DiceBear Avatar Integration** - Unique robot avatars for each character
+- **Edit & Delete** - Modify character names or remove them anytime
+- **LocalStorage Persistence** - Characters saved automatically
+
+### 3D Scene
+- **Dynamic Character Placement** - Intelligent positioning algorithm:
+  - Center-based circular arrangement
+  - Collision detection to prevent overlaps
+  - Automatic scaling for any number of characters
+- **Animated Robots** - Each character displays random animations
+- **Smooth Camera Movements** - GSAP-powered cinematic transitions
+- **Dynamic Lighting** - Spotlight effects for dramatic reveals
+
+### Selection System
+- **Random Lottery** - Fair random selection from remaining characters
+- **Particle Effects** - Spectacular visual feedback:
+  - Gold particle burst
+  - Sparkle effects
+  - Firework celebration
+- **Selection Tracking** - Progress saved to localStorage
+- **Statistics Display** - Real-time progress monitoring
+
+### UI/UX
+- **Responsive Design** - Works on desktop and mobile devices
+- **Intuitive Controls** - Easy navigation between screens
+- **Progress Tracking** - Visual feedback on selection status
+- **Completion Detection** - Automatic prompt when all characters are selected
 
 ## 🎮 How to Use
 
-1. **Initial View**: When you load the page, you'll see all 14 robot characters arranged on a platform with an auto-rotating camera.
+### Step 1: Add Characters (`input.html`)
 
-2. **Select a Character**: Click the "GO" button at the bottom of the screen to randomly select a character.
+Choose one of three input methods:
 
-3. **Character Reveal**: 
-   - The camera zooms in on the selected character
-   - Background darkens with a spotlight on the winner
-   - Character performs random emotes
-   - Name card flips to reveal the character's name
-   - Character gives a thumbs up
+1. **Number Generation**: Enter a number (1-50) to auto-generate characters named "User 1", "User 2", etc.
+2. **Text Paste**: Copy and paste names from Excel or a text file (one name per line)
+3. **Manual Addition**: Click the "+ Add" button to add characters one by one
 
-4. **Return to Overview**: Click the "RETURN" button to go back to the full view and select again.
+Each character gets a unique robot avatar from DiceBear. You can edit names or delete characters before starting.
+
+### Step 2: Start the Lottery (`index.html`)
+
+1. Click **"배치 시작하기"** (Start) to proceed to the 3D scene
+2. Characters are randomly arranged in a circular pattern
+3. The camera smoothly descends to reveal all characters
+4. Watch as characters perform random animations
+
+### Step 3: Make Selections
+
+1. Click the **"GO"** button to randomly select a character
+2. Enjoy the dramatic reveal:
+   - Background darkens
+   - Spotlight focuses on the winner
+   - Particle effects burst
+   - Character performs emotes
+   - Name card flips to reveal identity
+
+3. Click **"RETURN"** to go back to the overview
+4. Repeat until all characters are selected
+
+### Step 4: Completion
+
+- Progress is tracked in the top-left corner
+- When all characters are selected, you'll be prompted to restart
+- All data persists in localStorage between sessions
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - A modern web browser with WebGL support
-- Local web server (or use the simple method below)
+- LocalStorage enabled
+- Local web server (or use the methods below)
 
 ### Installation
 
@@ -69,22 +117,29 @@ npx http-server
 
 3. Open your browser and navigate to:
 ```
-http://localhost:8000
+http://localhost:8000/input.html
 ```
 
 ## 📁 Project Structure
 
 ```
 kujikuji/
-├── index.html          # Main HTML file with embedded JavaScript
-├── main.css           # Stylesheet for UI elements
+├── input.html          # Character input screen
+├── index.html          # Main 3D lottery scene
+├── main.css           # Global stylesheet
+├── js/
+│   ├── storage.js     # LocalStorage data management
+│   ├── utils.js       # Utility functions (positioning, collision detection)
+│   └── particles.js   # Particle effect system
+├── libs/
+│   └── gsap.min.js    # GSAP animation library (local)
 ├── build/             # Three.js library files
 │   └── three.module.js
 ├── jsm/               # Three.js addons and utilities
-│   ├── controls/
-│   ├── loaders/
-│   ├── geometries/
-│   └── libs/
+│   ├── controls/      # OrbitControls
+│   ├── loaders/       # GLTFLoader, FontLoader
+│   ├── geometries/    # TextGeometry
+│   └── libs/          # Stats, GUI
 ├── models/            # 3D model files
 │   └── gltf/
 │       └── RobotExpressive/
@@ -95,41 +150,71 @@ kujikuji/
 ## 🛠️ Technologies Used
 
 - **[Three.js](https://threejs.org/)** - 3D graphics library
-- **[GSAP](https://greensock.com/gsap/)** - Animation library for smooth transitions
+- **[GSAP](https://greensock.com/gsap/)** - Animation library (local)
+- **[DiceBear API](https://www.dicebear.com/)** - Avatar generation
 - **[GLTF](https://www.khronos.org/gltf/)** - 3D model format
 - **WebGL** - Hardware-accelerated 3D rendering
+- **LocalStorage** - Client-side data persistence
 - **OrbitControls** - Camera controls for user interaction
 
 ## 🎨 Customization
 
-### Changing Character Names
+### Adding Your Own Character Names
 
-Edit the `nameList` array in `index.html`:
+1. Open `input.html`
+2. Use any of the three input methods
+3. Characters are automatically saved to localStorage
 
-```javascript
-const nameList = [
-    'NAME1',
-    'NAME2',
-    // ... add your names
-];
-```
+### Adjusting Visual Effects
 
-### Adjusting Character Positions
-
-Modify the `initPos` array to change character positions and rotations:
+Edit `js/particles.js` to customize:
+- Particle count
+- Colors
+- Animation duration
+- Effect types
 
 ```javascript
-const initPos = [
-    {x: 0, z: 0, rot: 0},    // x, z: position, rot: rotation in degrees
-    {x: 10, z: -20, rot: 45},
-    // ...
-];
+ParticleEffects.createSelectionEffect(scene, position, {
+    particleCount: 100,  // More particles
+    color: 0xFF0000,     // Red particles
+    duration: 3          // Longer animation
+});
 ```
 
-### Adding More Characters
+### Changing Positioning Algorithm
 
-1. Add more entries to both `initPos` and `nameList` arrays
-2. The application will automatically load the additional characters
+Modify `js/utils.js` → `generatePositions()`:
+- Adjust `minDistance` for spacing
+- Change layer spacing
+- Modify circular/spiral patterns
+
+## 📊 Data Management
+
+### LocalStorage Structure
+
+```json
+{
+  "characters": [
+    {
+      "id": "unique-id",
+      "name": "Character Name",
+      "avatarSeed": "random-seed",
+      "selected": false,
+      "selectedAt": null,
+      "createdAt": "2025-10-26T..."
+    }
+  ],
+  "selectedCharacters": [],
+  "createdAt": "2025-10-26T...",
+  "updatedAt": "2025-10-26T..."
+}
+```
+
+### Data Operations
+
+- **Export**: Click "데이터 내보내기" to download JSON backup
+- **Reset**: Clear all data and start fresh
+- **Persist**: Data automatically saves after each action
 
 ## 🎭 Animation States
 
