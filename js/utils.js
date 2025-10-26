@@ -3,6 +3,17 @@
  * 공통으로 사용되는 유틸리티 함수 모음
  */
 
+// ===== 배치 설정 상수 =====
+const POSITION_CONFIG = {
+    // 그리드 배치 설정
+    CELL_SIZE: 6,                // 각 셀의 크기 (캐릭터당 할당된 공간)
+    RANDOM_OFFSET_RANGE: 2,      // 셀 내부에서 랜덤 오프셋 범위 (±2)
+    RANDOM_ROTATION_RANGE: 90,   // 회전 랜덤 범위 (±30도)
+    GRID_COLUMNS: 0,             // 열 개수 (0이면 자동 계산)
+    MIN_DISTANCE: 8,             // 최소 거리 (충돌 검사용)
+    MAX_ATTEMPTS: 50             // 최대 배치 시도 횟수
+};
+
 const Utils = {
     /**
      * 배열을 랜덤하게 섞기 (Fisher-Yates)
@@ -112,70 +123,101 @@ const Utils = {
     },
 
     /**
-     * 중심에서 멀어지는 순서로 위치 생성 (겹침 방지)
+     * 나선형 그리드 배치 (중심에서 바깥으로 - 울람 나선 스타일)
+     * 각 캐릭터는 지정된 셀 안에서 랜덤 배치
      * @param {number} count 캐릭터 수
      * @param {number} minDistance 최소 거리
      * @param {number} maxAttempts 최대 시도 횟수
      * @returns {Array<Object>} 위치 배열 [{x, z, rotation}]
      */
-    generatePositions(count, minDistance = 3, maxAttempts = 50) {
+    generatePositions(count, minDistance = POSITION_CONFIG.MIN_DISTANCE, maxAttempts = POSITION_CONFIG.MAX_ATTEMPTS) {
         const positions = [];
-        let currentLayer = 0;
-        let itemsInLayer = 8; // 첫 번째 레이어의 아이템 수
-        let currentIndex = 0;
+        
+        // 나선형 좌표 생성 (중심에서 바깥으로)
+        const spiralCoords = this.generateSpiralCoordinates(count);
 
         for (let i = 0; i < count; i++) {
+            const {col, row} = spiralCoords[i];
+            
             let placed = false;
             let attempts = 0;
 
             while (!placed && attempts < maxAttempts) {
-                // 현재 레이어의 위치 계산
-                const layerIndex = currentIndex % itemsInLayer;
-                const pos = this.circularPosition(
-                    layerIndex,
-                    itemsInLayer,
-                    5, // 기본 반지름
-                    currentLayer
-                );
-
-                // 약간의 랜덤성 추가
-                pos.x += (Math.random() - 0.5) * 1;
-                pos.z += (Math.random() - 0.5) * 1;
+                // 셀의 중심 위치 계산
+                const cellCenterX = col * POSITION_CONFIG.CELL_SIZE;
+                const cellCenterZ = row * POSITION_CONFIG.CELL_SIZE;
+                
+                // 셀 내부에서 랜덤 오프셋 적용
+                const randomX = (Math.random() - 0.5) * POSITION_CONFIG.RANDOM_OFFSET_RANGE * 2;
+                const randomZ = (Math.random() - 0.5) * POSITION_CONFIG.RANDOM_OFFSET_RANGE * 2;
+                
+                const pos = {
+                    x: cellCenterX + randomX,
+                    z: cellCenterZ + randomZ
+                };
 
                 // 충돌 검사
                 if (!this.checkCollision(pos, positions, minDistance)) {
-                    // 중앙을 향하도록 회전 각도 계산
-                    const rotation = Math.atan2(pos.x, pos.z) * (180 / Math.PI);
+                    // 중앙을 향하도록 기본 회전 + 랜덤 회전
+                    const baseRotation = Math.atan2(pos.x, pos.z) * (180 / Math.PI);
+                    const randomRotation = (Math.random() - 0.5) * POSITION_CONFIG.RANDOM_ROTATION_RANGE * 2;
                     
                     positions.push({
                         x: pos.x,
                         z: pos.z,
-                        rotation: rotation + (Math.random() - 0.5) * 30 // 약간의 랜덤 회전
+                        rotation: baseRotation + randomRotation
                     });
                     
                     placed = true;
-                    currentIndex++;
-
-                    // 레이어가 가득 차면 다음 레이어로
-                    if (currentIndex >= itemsInLayer) {
-                        currentLayer++;
-                        itemsInLayer = Math.ceil(itemsInLayer * 1.5); // 각 레이어마다 증가
-                        currentIndex = 0;
-                    }
                 }
 
                 attempts++;
             }
 
-            // 최대 시도 횟수 초과 시 강제 배치
+            // 최대 시도 횟수 초과 시 셀 중앙에 강제 배치
             if (!placed) {
-                const fallbackPos = this.spiralPosition(i, minDistance);
-                positions.push(fallbackPos);
-                console.warn(`⚠️ 캐릭터 ${i} 강제 배치`);
+                const cellCenterX = col * POSITION_CONFIG.CELL_SIZE;
+                const cellCenterZ = row * POSITION_CONFIG.CELL_SIZE;
+                
+                positions.push({
+                    x: cellCenterX,
+                    z: cellCenterZ,
+                    rotation: Math.atan2(cellCenterX, cellCenterZ) * (180 / Math.PI)
+                });
+                console.warn(`⚠️ 캐릭터 ${i} 강제 배치 (셀 중앙)`);
             }
         }
 
+        console.log(`✅ 나선형 그리드 배치 완료: ${count}개 캐릭터`);
         return positions;
+    },
+
+    /**
+     * 울람 나선 좌표 생성 (중심에서 바깥으로)
+     * 0: (0,0) → 1: (1,0) → 2: (1,1) → 3: (0,1) → 4: (-1,1) → 5: (-1,0) → ...
+     * @param {number} count 필요한 좌표 개수
+     * @returns {Array<Object>} [{col, row}, ...]
+     */
+    generateSpiralCoordinates(count) {
+        const coords = [];
+        let x = 0, z = 0;
+        let dx = 0, dz = -1; // 시작 방향: 아래
+        
+        for (let i = 0; i < count; i++) {
+            coords.push({col: x, row: z});
+            
+            // 방향 전환 판단 (나선의 모서리)
+            if (x === z || (x < 0 && x === -z) || (x > 0 && x === 1 - z)) {
+                const temp = dx;
+                dx = -dz;
+                dz = temp;
+            }
+            
+            x += dx;
+            z += dz;
+        }
+        
+        return coords;
     },
 
     /**

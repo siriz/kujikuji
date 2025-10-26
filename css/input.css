@@ -1,0 +1,441 @@
+/* ===== Input Page Specific Styles ===== */
+.input-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+}
+
+.header h1 {
+    font-size: 3em;
+    margin: 0;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.header p {
+    margin: 10px 0 0 0;
+    color: #ccc;
+    font-size: 1.1em;
+}
+
+/* ===== Tab Navigation ===== */
+.tab-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tab-button.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-bottom-color: #4a9eff;
+}
+
+/* ===== Tab Content ===== */
+.tab-content {
+    display: none;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 30px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Number Input Mode ===== */
+.number-input-group {
+    text-align: center;
+}
+
+.number-input-group label {
+    display: block;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.number-input-group input[type="number"] {
+    width: 200px;
+    padding: 15px;
+    font-size: 1.5em;
+    text-align: center;
+    border: 2px solid #4a9eff;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.number-input-group input[type="number"]:focus {
+    outline: none;
+    border-color: #6bb3ff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.generate-btn {
+    margin-top: 20px;
+    padding: 15px 40px;
+    font-size: 1.1em;
+    background: #4a9eff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.generate-btn:hover {
+    background: #6bb3ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74, 158, 255, 0.3);
+}
+
+/* ===== Text Input Mode ===== */
+.text-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.text-input-group label {
+    font-size: 1.1em;
+    color: #fff;
+}
+
+.text-input-group textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 15px;
+    font-size: 1em;
+    font-family: inherit;
+    border: 2px solid #4a9eff;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    resize: vertical;
+}
+
+.text-input-group textarea:focus {
+    outline: none;
+    border-color: #6bb3ff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.text-input-group .hint {
+    color: #aaa;
+    font-size: 0.9em;
+}
+
+/* ===== Manual Add Mode ===== */
+.manual-add-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.add-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.add-form input[type="text"] {
+    flex: 1;
+    padding: 12px;
+    font-size: 1em;
+    border: 2px solid #4a9eff;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.add-form input[type="text"]:focus {
+    outline: none;
+    border-color: #6bb3ff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.add-btn {
+    padding: 12px 24px;
+    background: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.add-btn:hover {
+    background: #34ce57;
+    transform: scale(1.05);
+}
+
+/* ===== Character List ===== */
+.character-list {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.character-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    margin-bottom: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.character-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.character-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #fff;
+    padding: 5px;
+}
+
+.character-name {
+    flex: 1;
+    font-size: 1.1em;
+    color: #fff;
+}
+
+.character-name input {
+    width: 100%;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #4a9eff;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 1em;
+}
+
+.character-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.edit-btn, .delete-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s;
+}
+
+.edit-btn {
+    background: #ffc107;
+    color: #000;
+}
+
+.edit-btn:hover {
+    background: #ffcd38;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: #fff;
+}
+
+.delete-btn:hover {
+    background: #e4606d;
+}
+
+.save-btn {
+    background: #28a745;
+    color: #fff;
+}
+
+.save-btn:hover {
+    background: #34ce57;
+}
+
+/* ===== Bottom Actions ===== */
+.bottom-actions {
+    margin-top: auto;
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.statistics {
+    flex: 1;
+    padding: 15px;
+    background: rgba(74, 158, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+}
+
+.statistics h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+}
+
+.statistics p {
+    margin: 5px 0;
+    font-size: 1em;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.start-btn, .reset-btn, .export-btn {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.start-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.start-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+}
+
+.start-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.reset-btn {
+    background: #dc3545;
+    color: #fff;
+}
+
+.reset-btn:hover {
+    background: #e4606d;
+}
+
+.export-btn {
+    background: #6c757d;
+    color: #fff;
+}
+
+.export-btn:hover {
+    background: #7d868f;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    grid-column: 1 / -1;
+}
+
+.empty-state svg {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+/* ===== Notification Animations ===== */
+@keyframes slideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(400px); opacity: 0; }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .input-container {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 2em;
+    }
+
+    .tab-button {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+
+    .tab-content {
+        padding: 20px 15px;
+    }
+
+    .number-input-group input[type="number"] {
+        width: 150px;
+        font-size: 1.2em;
+    }
+
+    /* 모바일에서 1열로 변경 */
+    .character-list {
+        grid-template-columns: 1fr;
+    }
+
+    .bottom-actions {
+        flex-direction: column;
+    }
+
+    .statistics {
+        order: 1;
+    }
+
+    .action-buttons {
+        order: 2;
+    }
+}

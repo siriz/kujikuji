@@ -1,0 +1,248 @@
+{
+  "en": {
+    "app": {
+      "title": "KUJIKUJI - Interactive 3D Lottery"
+    },
+    "input": {
+      "title": "Add Characters",
+      "subtitle": "Add characters and start random lottery!",
+      "tab1": "Generate by Number",
+      "tab2": "Paste Text",
+      "tab3": "Add Manually",
+      "method1": {
+        "label": "Enter number of characters to generate",
+        "button": "Generate Characters"
+      },
+      "method2": {
+        "label": "Enter character names (one per line)",
+        "placeholder": "User 1\nUser 2\nUser 3\n...",
+        "hint": "💡 Tip: You can copy and paste from Excel or Notepad.",
+        "button": "Add Characters"
+      },
+      "method3": {
+        "placeholder": "Enter character name",
+        "button": "+ Add"
+      },
+      "emptyState": {
+        "line1": "No characters added yet.",
+        "line2": "Please add characters using one of the methods above."
+      },
+      "selected": "✓ Selected",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "stats": {
+        "title": "📊 Current Status",
+        "total": "Total Characters",
+        "selected": "Selected",
+        "remaining": "Remaining",
+        "unit": ""
+      },
+      "startButton": "Start Placement",
+      "resetButton": "Reset All",
+      "exportButton": "Export Data",
+      "notifications": {
+        "generated": "characters generated!",
+        "added": "characters added!",
+        "addedSingle": "character added!",
+        "updated": "Name updated!",
+        "deleted": "Character deleted.",
+        "resetConfirm": "⚠️ All data will be deleted. Continue?",
+        "resetComplete": "All data has been reset.",
+        "exported": "Data downloaded.",
+        "enterNumber": "⚠️ Please enter a number between 1-50.",
+        "enterName": "⚠️ Please enter at least one name.",
+        "enterSingleName": "⚠️ Please enter a name.",
+        "deleteConfirm": "Really delete this character?"
+      }
+    },
+    "select": {
+      "goButton": "GO",
+      "returnButton": "RETURN",
+      "backButton": "⬅️ Back to Input",
+      "stats": {
+        "total": "Total",
+        "selected": "Selected",
+        "remaining": "Remaining"
+      },
+      "completion": {
+        "title": "🎉 All characters selected!",
+        "message": "Would you like to restart?"
+      },
+      "confirm": {
+        "back": "Return to input screen?",
+        "reset": "Reset all data and start over?"
+      }
+    },
+    "common": {
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "save": "Save",
+      "close": "Close"
+    }
+  },
+  "ja": {
+    "app": {
+      "title": "KUJIKUJI - インタラクティブ3D抽選"
+    },
+    "input": {
+      "title": "キャラクター追加",
+      "subtitle": "キャラクターを追加してランダム抽選を開始！",
+      "tab1": "番号で生成",
+      "tab2": "テキスト貼り付け",
+      "tab3": "手動追加",
+      "method1": {
+        "label": "生成するキャラクター数を入力",
+        "button": "キャラクター生成"
+      },
+      "method2": {
+        "label": "キャラクター名を1行に1つ入力",
+        "placeholder": "ユーザー 1\nユーザー 2\nユーザー 3\n...",
+        "hint": "💡 ヒント：ExcelやNotepadからコピー＆ペーストできます。",
+        "button": "キャラクター追加"
+      },
+      "method3": {
+        "placeholder": "キャラクター名を入力",
+        "button": "+ 追加"
+      },
+      "emptyState": {
+        "line1": "まだキャラクターが追加されていません。",
+        "line2": "上記の方法のいずれかでキャラクターを追加してください。"
+      },
+      "selected": "✓ 選択済",
+      "edit": "編集",
+      "delete": "削除",
+      "save": "保存",
+      "stats": {
+        "title": "📊 現在の状態",
+        "total": "総キャラクター",
+        "selected": "選択済",
+        "remaining": "残り",
+        "unit": "名"
+      },
+      "startButton": "配置開始",
+      "resetButton": "全てリセット",
+      "exportButton": "データ出力",
+      "notifications": {
+        "generated": "キャラクターが生成されました！",
+        "added": "キャラクターが追加されました！",
+        "addedSingle": "キャラクターが追加されました！",
+        "updated": "名前が更新されました！",
+        "deleted": "キャラクターが削除されました。",
+        "resetConfirm": "⚠️ 全てのデータが削除されます。続けますか？",
+        "resetComplete": "全てのデータがリセットされました。",
+        "exported": "データがダウンロードされました。",
+        "enterNumber": "⚠️ 1〜50の数字を入力してください。",
+        "enterName": "⚠️ 最低1つの名前を入力してください。",
+        "enterSingleName": "⚠️ 名前を入力してください。",
+        "deleteConfirm": "本当にこのキャラクターを削除しますか？"
+      }
+    },
+    "select": {
+      "goButton": "GO",
+      "returnButton": "戻る",
+      "backButton": "⬅️ 入力画面へ",
+      "stats": {
+        "total": "総数",
+        "selected": "選択済",
+        "remaining": "残り"
+      },
+      "completion": {
+        "title": "🎉 全て選択完了！",
+        "message": "もう一度始めますか？"
+      },
+      "confirm": {
+        "back": "入力画面に戻りますか？",
+        "reset": "全てのデータをリセットしますか？"
+      }
+    },
+    "common": {
+      "cancel": "キャンセル",
+      "confirm": "確認",
+      "save": "保存",
+      "close": "閉じる"
+    }
+  },
+  "ko": {
+    "app": {
+      "title": "KUJIKUJI - 인터랙티브 3D 추첨"
+    },
+    "input": {
+      "title": "캐릭터 추가",
+      "subtitle": "캐릭터를 추가하고 랜덤 추첨을 시작하세요!",
+      "tab1": "숫자로 생성",
+      "tab2": "텍스트 붙여넣기",
+      "tab3": "직접 추가",
+      "method1": {
+        "label": "생성할 캐릭터 수를 입력하세요",
+        "button": "캐릭터 생성"
+      },
+      "method2": {
+        "label": "캐릭터 이름을 한 줄에 하나씩 입력하세요",
+        "placeholder": "User 1\nUser 2\nUser 3\n...",
+        "hint": "💡 팁: 엑셀이나 메모장에서 복사해서 붙여넣을 수 있습니다.",
+        "button": "캐릭터 추가"
+      },
+      "method3": {
+        "placeholder": "캐릭터 이름 입력",
+        "button": "+ 추가"
+      },
+      "emptyState": {
+        "line1": "아직 추가된 캐릭터가 없습니다.",
+        "line2": "위의 방법 중 하나를 선택해서 캐릭터를 추가해주세요."
+      },
+      "selected": "✓ 선택됨",
+      "edit": "수정",
+      "delete": "삭제",
+      "save": "저장",
+      "stats": {
+        "title": "📊 현재 상태",
+        "total": "총 캐릭터",
+        "selected": "선택됨",
+        "remaining": "남은 캐릭터",
+        "unit": "명"
+      },
+      "startButton": "배치 시작하기",
+      "resetButton": "전체 초기화",
+      "exportButton": "데이터 내보내기",
+      "notifications": {
+        "generated": "명의 캐릭터가 생성되었습니다!",
+        "added": "명의 캐릭터가 추가되었습니다!",
+        "addedSingle": "캐릭터가 추가되었습니다!",
+        "updated": "이름이 수정되었습니다!",
+        "deleted": "캐릭터가 삭제되었습니다.",
+        "resetConfirm": "⚠️ 모든 데이터가 삭제됩니다. 계속하시겠습니까?",
+        "resetComplete": "모든 데이터가 초기화되었습니다.",
+        "exported": "데이터가 다운로드되었습니다.",
+        "enterNumber": "⚠️ 1~50 사이의 숫자를 입력해주세요.",
+        "enterName": "⚠️ 최소 1명 이상의 이름을 입력해주세요.",
+        "enterSingleName": "⚠️ 이름을 입력해주세요.",
+        "deleteConfirm": "정말 이 캐릭터를 삭제하시겠습니까?"
+      }
+    },
+    "select": {
+      "goButton": "GO",
+      "returnButton": "돌아가기",
+      "backButton": "⬅️ 입력 화면",
+      "stats": {
+        "total": "총",
+        "selected": "선택",
+        "remaining": "남음"
+      },
+      "completion": {
+        "title": "🎉 모든 캐릭터를 선택했습니다!",
+        "message": "다시 시작하시겠습니까?"
+      },
+      "confirm": {
+        "back": "입력 화면으로 돌아가시겠습니까?",
+        "reset": "모든 데이터를 초기화하시겠습니까?"
+      }
+    },
+    "common": {
+      "cancel": "취소",
+      "confirm": "확인",
+      "save": "저장",
+      "close": "닫기"
+    }
+  }
+}

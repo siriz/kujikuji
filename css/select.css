@@ -66,10 +66,99 @@ button:active {
 	font-family: 'Arial', sans-serif;
 }
 
+/* Stats Display */
+#stats-container {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	background: rgba(0, 0, 0, 0.8);
+	padding: 12px 24px;
+	border-radius: 50px;
+	color: white;
+	font-family: Arial, sans-serif;
+	z-index: 100;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stats-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+}
+
+.stats-label {
+	font-size: 0.75em;
+	opacity: 0.8;
+	font-weight: normal;
+}
+
+.stats-value {
+	font-size: 1.4em;
+	font-weight: bold;
+	color: #4CAF50;
+}
+
+.stats-divider {
+	width: 1px;
+	height: 30px;
+	background: rgba(255, 255, 255, 0.3);
+}
+
+.back-button {
+	margin-right: 10px;
+	padding: 8px 16px !important;
+	font-size: 0.9em !important;
+	background: rgba(108, 117, 125, 0.9) !important;
+	color: white !important;
+	border: none !important;
+	border-radius: 20px !important;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	white-space: nowrap;
+}
+
+.back-button:hover {
+	background: rgba(108, 117, 125, 1) !important;
+	transform: translateY(-1px) !important;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
 	button {
 		font-size: 24px;
 		padding: 15px 30px;
+	}
+	
+	#stats-container {
+		top: 10px;
+		left: 10px;
+		gap: 12px;
+		padding: 10px 18px;
+		border-radius: 40px;
+		max-width: calc(100% - 100px);
+		flex-wrap: wrap;
+	}
+	
+	.stats-label {
+		font-size: 0.65em;
+	}
+	
+	.stats-value {
+		font-size: 1.2em;
+	}
+	
+	.stats-divider {
+		height: 24px;
+	}
+	
+	.back-button {
+		padding: 6px 12px !important;
+		font-size: 0.8em !important;
+		margin-right: 5px;
 	}
 }

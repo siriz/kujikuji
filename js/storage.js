@@ -111,11 +111,14 @@ const StorageManager = {
     },
 
     /**
-     * 숫자만큼 자동으로 캐릭터 생성
+     * 숫자 기반 캐릭터 자동 생성 (기존 데이터 초기화)
      * @param {number} count 생성할 캐릭터 수
      * @returns {Array<Object>} 생성된 캐릭터 배열
      */
     generateCharacters(count) {
+        // 기존 데이터 초기화
+        this.clearAll();
+        
         const names = [];
         for (let i = 1; i <= count; i++) {
             names.push(`User ${i}`);

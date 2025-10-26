@@ -1,39 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>KUJIKUJI | 캐릭터 선택</title>
+		<title data-i18n="app.title">KUJIKUJI | Character Selection</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<meta name="description" content="Interactive 3D lottery application built with Three.js">
 		<meta name="author" content="siriz">
 		<link type="text/css" rel="stylesheet" href="css/main.css">
 		<link type="text/css" rel="stylesheet" href="css/select.css">
+		<link type="text/css" rel="stylesheet" href="css/language-selector.css">
 		<script src="libs/gsap/gsap.min.js"></script>
 	</head>
 
 	<body>
+		<!-- Language Selector -->
+		<div class="language-selector">
+			<span class="language-selector__icon">🌐</span>
+			<select class="language-selector__dropdown" id="languageSelector">
+				<option value="en">English</option>
+				<option value="ja">日本語</option>
+				<option value="ko">한국어</option>
+			</select>
+		</div>
 		
 		<div id="wrapper">
-			<button id="btn_select" class="hide">GO</button>
+			<button id="btn_select" class="hide" data-i18n="select.goButton">GO</button>
 		</div>
 
-		<!-- Stats Display -->
-		<div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; color: white; font-family: Arial; z-index: 100;">
-			<h3 style="margin: 0 0 10px 0; font-size: 1.2em;">📊 진행 상황</h3>
-			<p style="margin: 5px 0;">총 캐릭터: <strong id="stats-total">0</strong>명</p>
-			<p style="margin: 5px 0;">선택됨: <strong id="stats-selected">0</strong>명</p>
-			<p style="margin: 5px 0;">남은 캐릭터: <strong id="stats-remaining">0</strong>명</p>
-			<button id="btn_back" style="margin-top: 10px; width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em;">
-				⬅️ 입력 화면으로
-			</button>
+	<!-- Stats Display -->
+	<div id="stats-container">
+		<button id="btn_back" class="back-button" data-i18n="select.backButton">
+			⬅️ Back to Input
+		</button>
+		<div class="stats-divider"></div>
+		<div class="stats-item">
+			<span class="stats-label" data-i18n="select.stats.total">Total</span>
+			<strong id="stats-total" class="stats-value">0</strong>
 		</div>
+		<div class="stats-divider"></div>
+		<div class="stats-item">
+			<span class="stats-label" data-i18n="select.stats.selected">Selected</span>
+			<strong id="stats-selected" class="stats-value">0</strong>
+		</div>
+		<div class="stats-divider"></div>
+		<div class="stats-item">
+			<span class="stats-label" data-i18n="select.stats.remaining">Remaining</span>
+			<strong id="stats-remaining" class="stats-value">0</strong>
+		</div>
+	</div>
 
-		<!-- Scripts -->
-		<script src="js/storage.js"></script>
-		<script src="js/utils.js"></script>
-		<script src="js/particles.js"></script>
+	<!-- Scripts -->
+	<script src="js/i18n.js"></script>
+	<script src="js/storage.js"></script>
+	<script src="js/utils.js"></script>
 
-		<script type="importmap">
+	<script type="importmap">
 			{
 				"imports": {
 					"three": "./libs/threejs/build/three.module.js",

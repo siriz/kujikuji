@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="utf-8">
+	<title>Robot Avatar Test - KujiKuji</title>
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			margin: 0;
+			overflow: hidden;
+			font-family: Arial, sans-serif;
+		}
+		#controls {
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			background: rgba(0, 0, 0, 0.8);
+			color: white;
+			padding: 20px;
+			border-radius: 8px;
+			max-width: 300px;
+			z-index: 100;
+		}
+		#controls h3 {
+			margin-top: 0;
+		}
+		.control-group {
+			margin: 15px 0;
+		}
+		.control-group label {
+			display: block;
+			margin-bottom: 5px;
+			font-size: 12px;
+			color: #aaa;
+		}
+		.control-group input[type="range"] {
+			width: 100%;
+		}
+		.control-group input[type="text"] {
+			width: 100%;
+			padding: 5px;
+			background: #333;
+			border: 1px solid #555;
+			color: white;
+			border-radius: 3px;
+		}
+		.value-display {
+			display: inline-block;
+			margin-left: 10px;
+			color: #4CAF50;
+			font-weight: bold;
+		}
+		button {
+			padding: 8px 16px;
+			background: #4CAF50;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			margin: 5px;
+		}
+		button:hover {
+			background: #45a049;
+		}
+		#info {
+			position: absolute;
+			bottom: 10px;
+			left: 10px;
+			background: rgba(0, 0, 0, 0.8);
+			color: white;
+			padding: 10px;
+			border-radius: 5px;
+			font-size: 12px;
+			max-width: 300px;
+		}
+	</style>
+</head>
+<body>
+	<div id="controls">
+		<h3>🤖 Avatar Position Control</h3>
+		
+		<div class="control-group">
+			<label>Avatar Seed:</label>
+			<input type="text" id="seedInput" value="test-avatar-123">
+			<button onclick="reloadAvatar()">Reload Avatar</button>
+		</div>
+
+		<div class="control-group">
+			<label>Position X: <span class="value-display" id="posXValue">0.000</span></label>
+			<input type="range" id="posX" min="-1" max="1" step="0.001" value="0">
+		</div>
+
+		<div class="control-group">
+			<label>Position Y: <span class="value-display" id="posYValue">-0.015</span></label>
+			<input type="range" id="posY" min="-1" max="1" step="0.001" value="-0.015">
+		</div>
+
+		<div class="control-group">
+			<label>Position Z: <span class="value-display" id="posZValue">0.000</span></label>
+			<input type="range" id="posZ" min="-1" max="1" step="0.001" value="0">
+		</div>
+
+		<div class="control-group">
+			<label>Rotation X: <span class="value-display" id="rotXValue">90°</span></label>
+			<input type="range" id="rotX" min="0" max="360" step="0.1" value="90">
+		</div>
+
+		<div class="control-group">
+			<label>Rotation Y: <span class="value-display" id="rotYValue">0°</span></label>
+			<input type="range" id="rotY" min="0" max="360" step="0.1" value="0">
+		</div>
+
+		<div class="control-group">
+			<label>Rotation Z: <span class="value-display" id="rotZValue">0°</span></label>
+			<input type="range" id="rotZ" min="0" max="360" step="0.1" value="0">
+		</div>
+
+		<div class="control-group">
+			<label>
+				<input type="checkbox" id="showHead3" checked> Show Head_3 Wireframe
+			</label>
+		</div>
+
+		<button onclick="copyValues()">📋 Copy Values</button>
+		<button onclick="resetValues()">🔄 Reset</button>
+		<button onclick="undo()">↩️ Undo</button>
+		<button onclick="redo()">↪️ Redo</button>
+	</div>
+
+	<div id="info">
+		<strong>SVG Info:</strong><br>
+		<span id="svgInfo">Loading...</span>
+	</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../libs/threejs/build/three.module.js",
+					"three/addons/": "../libs/threejs/jsm/"
+				}
+			}
+		</script>	<script type="module">
+		import * as THREE from 'three';
+		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+		import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+
+		let scene, camera, renderer, controls;
+		let robot, avatarGroup, headParent, head3Wireframe;
+		let history = [];
+		let historyIndex = -1;
+		const MAX_HISTORY = 50;
+
+		init();
+		animate();
+
+		function init() {
+			// Scene
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color(0x333333);
+
+			// Camera
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+			camera.position.set(0, 5, 12);
+
+			// Renderer
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.shadowMap.enabled = true;
+			document.body.appendChild(renderer.domElement);
+
+			// Lights
+			const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+			scene.add(ambientLight);
+
+			const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+			dirLight.position.set(5, 10, 5);
+			dirLight.castShadow = true;
+			scene.add(dirLight);
+
+			// Ground
+			const ground = new THREE.Mesh(
+				new THREE.PlaneGeometry(10, 10),
+				new THREE.MeshStandardMaterial({ color: 0x222222 })
+			);
+			ground.rotation.x = -Math.PI / 2;
+			ground.receiveShadow = true;
+			scene.add(ground);
+
+			// Grid
+			const grid = new THREE.GridHelper(10, 20, 0x444444, 0x333333);
+			scene.add(grid);
+
+			// Controls
+			controls = new OrbitControls(camera, renderer.domElement);
+			controls.enableDamping = true;
+			controls.target.set(0, 1, 0);
+
+			// Load Robot
+			loadRobot();
+
+			// Event listeners
+			setupControls();
+			window.addEventListener('resize', onWindowResize);
+		}
+
+		function loadRobot() {
+			const loader = new GLTFLoader();
+			loader.load('../libs/models/gltf/RobotExpressive/RobotExpressive.glb', function(gltf) {
+				robot = gltf.scene;
+				
+				robot.traverse(function(node) {
+					if (node.isMesh) {
+						node.castShadow = true;
+					}
+				});
+
+				// Hide Head_4
+				const head = robot.getObjectByName('Head_4');
+				if (head) head.visible = false;
+
+				// Get Head_3 for avatar placement
+				headParent = robot.getObjectByName('Head_3');
+
+				// Add Head_3 wireframe helper
+				if (headParent) {
+					const box = new THREE.BoxHelper(headParent, 0x00ff00);
+					head3Wireframe = box;
+					scene.add(box);
+				}
+
+				scene.add(robot);
+				
+				// Load avatar
+				loadAvatar();
+			});
+		}
+
+		function loadAvatar() {
+			const seed = document.getElementById('seedInput').value;
+			const avatarUrl = `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${seed}`;
+
+			// Remove old avatar if exists
+			if (avatarGroup) {
+				headParent.remove(avatarGroup);
+			}
+
+			// Create avatar plane with texture
+			const geometry = new THREE.PlaneGeometry(0.02, 0.02);
+			const material = new THREE.MeshPhysicalMaterial({
+				color: 0xffff00,
+				side: THREE.DoubleSide,
+				transparent: true
+			});
+			
+			avatarGroup = new THREE.Mesh(geometry, material);
+			avatarGroup.name = 'AvatarPlane';
+
+			// Load texture
+			const textureLoader = new THREE.TextureLoader();
+			textureLoader.load(avatarUrl, function(texture) {
+				avatarGroup.material.map = texture;
+				avatarGroup.material.needsUpdate = true;
+				
+				// Update info display
+				document.getElementById('svgInfo').innerHTML = `
+					✅ Avatar texture loaded<br>
+					Size: 0.02 x 0.02<br>
+					Type: TextureLoader (Plane)
+				`;
+			}, undefined, function(error) {
+				console.error('Failed to load avatar:', error);
+				document.getElementById('svgInfo').textContent = '⚠️ Failed to load avatar texture';
+			});
+
+			// Apply initial transforms
+			updateAvatarTransform();
+
+			headParent.add(avatarGroup);
+		}
+
+		function updateAvatarTransform() {
+			if (!avatarGroup) return;
+
+			// Position
+			const posX = parseFloat(document.getElementById('posX').value);
+			const posY = parseFloat(document.getElementById('posY').value);
+			const posZ = parseFloat(document.getElementById('posZ').value);
+			avatarGroup.position.set(posX, posY, posZ);
+
+			// Rotation
+			const rotX = parseFloat(document.getElementById('rotX').value) * Math.PI / 180;
+			const rotY = parseFloat(document.getElementById('rotY').value) * Math.PI / 180;
+			const rotZ = parseFloat(document.getElementById('rotZ').value) * Math.PI / 180;
+			avatarGroup.rotation.set(rotX, rotY, rotZ);
+
+			// Update Head_3 wireframe visibility
+			if (head3Wireframe) {
+				head3Wireframe.visible = document.getElementById('showHead3').checked;
+				if (head3Wireframe.visible) {
+					head3Wireframe.update();
+				}
+			}
+		}
+
+		function setupControls() {
+			const controls = ['posX', 'posY', 'posZ', 'rotX', 'rotY', 'rotZ'];
+			
+			// Save initial state
+			saveState();
+			
+			controls.forEach(id => {
+				const input = document.getElementById(id);
+				const display = document.getElementById(id + 'Value');
+				
+				input.addEventListener('input', function() {
+					let value = parseFloat(this.value);
+					if (id.startsWith('rot')) {
+						display.textContent = value.toFixed(1) + '°';
+					} else {
+						display.textContent = value.toFixed(3);
+					}
+					updateAvatarTransform();
+				});
+				
+				// Save state when slider is released
+				input.addEventListener('change', function() {
+					saveState();
+				});
+			});
+
+			// Checkbox for Head_3 wireframe
+			document.getElementById('showHead3').addEventListener('change', updateAvatarTransform);
+		}
+
+		function saveState() {
+			const state = {
+				posX: parseFloat(document.getElementById('posX').value),
+				posY: parseFloat(document.getElementById('posY').value),
+				posZ: parseFloat(document.getElementById('posZ').value),
+				rotX: parseFloat(document.getElementById('rotX').value),
+				rotY: parseFloat(document.getElementById('rotY').value),
+				rotZ: parseFloat(document.getElementById('rotZ').value)
+			};
+			
+			// Remove any states after current index (when new change is made after undo)
+			history = history.slice(0, historyIndex + 1);
+			
+			// Add new state
+			history.push(state);
+			historyIndex++;
+			
+			// Limit history size
+			if (history.length > MAX_HISTORY) {
+				history.shift();
+				historyIndex--;
+			}
+			
+			console.log(`📝 State saved (${historyIndex + 1}/${history.length})`);
+		}
+
+		function restoreState(state) {
+			document.getElementById('posX').value = state.posX;
+			document.getElementById('posY').value = state.posY;
+			document.getElementById('posZ').value = state.posZ;
+			document.getElementById('rotX').value = state.rotX;
+			document.getElementById('rotY').value = state.rotY;
+			document.getElementById('rotZ').value = state.rotZ;
+			
+			// Update displays
+			document.getElementById('posXValue').textContent = state.posX.toFixed(3);
+			document.getElementById('posYValue').textContent = state.posY.toFixed(3);
+			document.getElementById('posZValue').textContent = state.posZ.toFixed(3);
+			document.getElementById('rotXValue').textContent = state.rotX.toFixed(1) + '°';
+			document.getElementById('rotYValue').textContent = state.rotY.toFixed(1) + '°';
+			document.getElementById('rotZValue').textContent = state.rotZ.toFixed(1) + '°';
+			
+			updateAvatarTransform();
+		}
+
+		window.reloadAvatar = function() {
+			loadAvatar();
+		};
+
+		window.undo = function() {
+			if (historyIndex > 0) {
+				historyIndex--;
+				restoreState(history[historyIndex]);
+				console.log(`↩️ Undo (${historyIndex + 1}/${history.length})`);
+			} else {
+				console.log('⚠️ No more undo history');
+			}
+		};
+
+		window.redo = function() {
+			if (historyIndex < history.length - 1) {
+				historyIndex++;
+				restoreState(history[historyIndex]);
+				console.log(`↪️ Redo (${historyIndex + 1}/${history.length})`);
+			} else {
+				console.log('⚠️ No more redo history');
+			}
+		};
+
+		window.copyValues = function() {
+			const values = {
+				position: {
+					x: parseFloat(document.getElementById('posX').value),
+					y: parseFloat(document.getElementById('posY').value),
+					z: parseFloat(document.getElementById('posZ').value)
+				},
+				rotation: {
+					x: parseFloat(document.getElementById('rotX').value),
+					y: parseFloat(document.getElementById('rotY').value),
+					z: parseFloat(document.getElementById('rotZ').value)
+				}
+			};
+
+			const code = `
+// Avatar Plane Configuration
+plane.position.set(${values.position.x}, ${values.position.y}, ${values.position.z});
+plane.rotation.x = Math.PI * ${(values.rotation.x / 180).toFixed(4)}; // ${values.rotation.x}°
+plane.rotation.y = Math.PI * ${(values.rotation.y / 180).toFixed(4)}; // ${values.rotation.y}°
+plane.rotation.z = Math.PI * ${(values.rotation.z / 180).toFixed(4)}; // ${values.rotation.z}°
+			`.trim();
+
+			navigator.clipboard.writeText(code).then(() => {
+				alert('✅ Values copied to clipboard!');
+			});
+		};
+
+		window.resetValues = function() {
+			document.getElementById('posX').value = 0;
+			document.getElementById('posY').value = -0.015;
+			document.getElementById('posZ').value = 0;
+			document.getElementById('rotX').value = 90;
+			document.getElementById('rotY').value = 0;
+			document.getElementById('rotZ').value = 0;
+			document.getElementById('showHead3').checked = true;
+			
+			// Update displays
+			document.getElementById('posXValue').textContent = '0.000';
+			document.getElementById('posYValue').textContent = '-0.015';
+			document.getElementById('posZValue').textContent = '0.000';
+			document.getElementById('rotXValue').textContent = '90.0°';
+			document.getElementById('rotYValue').textContent = '0.0°';
+			document.getElementById('rotZValue').textContent = '0.0°';
+			
+			updateAvatarTransform();
+			saveState(); // Save reset state to history
+		};
+
+		function animate() {
+			requestAnimationFrame(animate);
+			controls.update();
+			renderer.render(scene, camera);
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+	</script>
+</body>
+</html>

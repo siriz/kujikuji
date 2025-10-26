@@ -16,6 +16,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import { ParticleEffects } from './particles.js';
 
 // ===== Global Variables =====
 let container, stats, clock, gui;
@@ -56,7 +58,34 @@ const cameraInitPos = new THREE.Vector3(0, 20, 30);
 const cameraInitLookAt = new THREE.Vector3(0, 2, 0);
 
 // ===== Initialize Application =====
-init();
+// Initialize i18n first, then start the app
+window.addEventListener('DOMContentLoaded', () => {
+	window.i18n.init().then(() => {
+		init();
+		setupLanguageSelector();
+	});
+});
+
+/**
+ * Setup language selector
+ */
+function setupLanguageSelector() {
+	const selector = document.getElementById('languageSelector');
+	if (selector) {
+		// Set current language
+		selector.value = window.i18n.getCurrentLanguage();
+		
+		// Handle language change
+		selector.addEventListener('change', (e) => {
+			window.i18n.setLanguage(e.target.value);
+			// Update button text dynamically
+			const btnSelect = document.getElementById('btn_select');
+			if (btnSelect && btnSelect.textContent !== 'GO') {
+				btnSelect.textContent = window.i18n.t('select.returnButton');
+			}
+		});
+	}
+}
 
 /**
  * Initialize the 3D scene, camera, lights, and models
@@ -87,13 +116,13 @@ function init() {
 	// Setup scene
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color( 0xe0e0e0 );
-	scene.fog = new THREE.Fog( 0xe0e0e0, 0, 100 );
+	scene.fog = new THREE.Fog( 0xe0e0e0, 30, 50 );
 
 	clock = new THREE.Clock();
 
 	// ===== Setup Lighting =====
 	// Spotlight for dramatic effect (initially off)
-	sLight = new THREE.SpotLight( 0xFFFFFF, 60, 125, Math.PI / 16, 0.25, 1 );
+	sLight = new THREE.SpotLight( 0xFFFFFF, 60, 125, Math.PI / 16, 0.9, 1 );
 	sLight.castShadow = true;
 	sLight.intensity = 0;
 	scene.add( sLight );
@@ -175,13 +204,18 @@ function init() {
 			// Return to overview
 			returnView(currentIdx);
 		}
+		else if ( btnSelect.status === 3 ) {
+			// Try Again - Reset all selections without confirmation
+			StorageManager.resetSelections(true);
+			window.location.reload();
+		}
 
 		timeStamp = new Date() * 1;
 	})
 
 	// ===== Back Button Event =====
 	document.getElementById('btn_back').addEventListener('click', () => {
-		if (confirm('입력 화면으로 돌아가시겠습니까?')) {
+		if (confirm(window.i18n.t('select.confirm.back'))) {
 			window.location.href = 'index.html';
 		}
 	});
@@ -201,12 +235,9 @@ function updateStatistics() {
 
 	// Check if all characters are selected
 	if (stats.isComplete) {
-		setTimeout(() => {
-			if (confirm('🎉 모든 캐릭터를 선택했습니다!\n\n다시 시작하시겠습니까?')) {
-				StorageManager.resetSelections(true);
-				window.location.reload();
-			}
-		}, 2000);
+		// Change GO button to "Try Again"
+		btnSelect.textContent = 'Try Again';
+		btnSelect.status = 3; // New status for reset
 	}
 }
 
@@ -235,6 +266,41 @@ function returnView(selectedIdx) {
 		duration: duration,
 		ease: ease
 	})
+	
+	// Fade in other characters back
+	for (let i = 0; i < modelGroup.length; i++) {
+		if (i !== selectedIdx && modelGroup[i].status !== 'dead') {
+			modelGroup[i].traverse(function(child) {
+				if (child.isMesh) {
+					// Re-enable shadows for characters
+					child.castShadow = true;
+					
+					// Handle both single material and material array
+					const materials = Array.isArray(child.material) ? child.material : [child.material];
+					
+					materials.forEach(function(material) {
+						if (material && material.transparent && material.userData) {
+							// Restore original opacity
+							const originalOpacity = material.userData.originalOpacity !== undefined 
+								? material.userData.originalOpacity 
+								: 1;
+							gsap.to(material, {
+								opacity: originalOpacity,
+								duration: duration,
+								ease: ease,
+								onComplete: function() {
+									// Disable transparency if original opacity was 1
+									if (originalOpacity >= 1) {
+										material.transparent = false;
+									}
+								}
+							});
+						}
+					});
+				}
+			});
+		}
+	}
 	
 	// Restore normal lighting
 	gsap.to(dirLight, {
@@ -304,6 +370,42 @@ function selectedKuji( selectedIdx ) {
 	// Focus spotlight on selected character
 	changeSpotLightPosition(selectedIdx);
 	
+	// Fade out other characters
+	for (let i = 0; i < modelGroup.length; i++) {
+		if (i !== selectedIdx && modelGroup[i].status !== 'dead') {
+			modelGroup[i].traverse(function(child) {
+				if (child.isMesh) {
+					// Disable shadows for non-selected characters
+					child.castShadow = false;
+					
+					// Handle both single material and material array
+					const materials = Array.isArray(child.material) ? child.material : [child.material];
+					
+					materials.forEach(function(material) {
+						if (material) {
+							// Initialize userData if not exists
+							if (!material.userData) {
+								material.userData = {};
+							}
+							// Store original opacity if not already stored
+							if (material.userData.originalOpacity === undefined) {
+								material.userData.originalOpacity = material.opacity !== undefined ? material.opacity : 1;
+							}
+							// Enable transparency
+							material.transparent = true;
+							// Fade out
+							gsap.to(material, {
+								opacity: 0,
+								duration: duration,
+								ease: ease
+							});
+						}
+					});
+				}
+			});
+		}
+	}
+	
 	// Darken background for dramatic effect
 	gsap.to(scene.background, {
 		r: 0, g: 0, b: 0,
@@ -336,21 +438,21 @@ function selectedKuji( selectedIdx ) {
 	var center = aabb.getCenter( new THREE.Vector3() );
 	var size = aabb.getSize( new THREE.Vector3() );
 
-	// Move camera to focus on selected character
+	// Move camera to focus on selected character (slightly elevated for better view)
 	gsap.to( camera.position, {
 		duration: duration,
 		ease: ease,
 		x: center.x,
-		y: center.y,
+		y: center.y + 2,  // Elevated camera position
 		z: center.z + size.z + 6,
 		onUpdate: function() {
 			camera.lookAt( center );
 			controls.target = center;
 		},
 		onComplete: function() {
-			// Create particle effect at character position
-			const particlePos = new THREE.Vector3(center.x, center.y, center.z);
-			ParticleEffects.createCombinedEffect(scene, particlePos);
+			// Create confetti celebration effect behind the character
+			const particlePos = new THREE.Vector3(center.x, center.y, center.z - 2);
+			ParticleEffects.createConfettiCelebration(scene, particlePos, camera);
 			
 			// Play random emote
 			fadeToAction(emotes[parseInt(Math.random() * emotes.length - 1)], 0.5, model);
@@ -407,7 +509,7 @@ function changeSpotLightPosition(idx) {
  */
 function loadModel(idx) {
 	const loader = new GLTFLoader();
-	loader.load( 'models/gltf/RobotExpressive/RobotExpressive.glb', function ( gltf ) {
+	loader.load( 'libs/models/gltf/RobotExpressive/RobotExpressive.glb', function ( gltf ) {
 		const model = gltf.scene;
 		
 		// Enable shadows for all meshes
@@ -418,20 +520,45 @@ function loadModel(idx) {
 			}
 		} );
 
-		// Hide head component
-		model.getObjectByName( 'Head_4' ).visible = false;
+		// Apply DiceBear avatar using SVGLoader
+		const head = model.getObjectByName( 'Head_4' );
+		const headParent = model.getObjectByName( 'Head_3' ); // Get parent for avatar placement
+		
+		// Hide Head_4 mesh only
+		if (head) {
+			head.visible = false;
+		}
 
-		// Add indicator plane
+		// Add avatar plane (this is where avatar should be displayed)
 		const geometry = new THREE.PlaneGeometry( 0.02, 0.02 );
-		const material = new THREE.MeshPhysicalMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+		const material = new THREE.MeshPhysicalMaterial( {
+			color: 0xffff00, 
+			side: THREE.DoubleSide,
+			transparent: true
+		} );
 		const plane = new THREE.Mesh( geometry, material );
 		plane.rotation.x = Math.PI * 90 / 180;
 		plane.position.y = -0.015;
-		model.getObjectByName( 'Head_3' ).add( plane );
+		plane.name = 'AvatarPlane';
+		headParent.add( plane );
+
+		// Load avatar texture onto the plane
+		if (characters[idx].avatarSeed) {
+			const avatarUrl = StorageManager.getAvatarUrl(characters[idx].avatarSeed);
+			const textureLoader = new THREE.TextureLoader();
+			
+			textureLoader.load(avatarUrl, function(texture) {
+				plane.material.map = texture;
+				plane.material.needsUpdate = true;
+				console.log(`✅ Avatar loaded for ${characters[idx].name}`);
+			}, undefined, function(error) {
+				console.warn(`⚠️ Failed to load avatar for ${characters[idx].name}:`, error);
+			});
+		}
 
 		// Load and add text labels
 		const fontLoader = new FontLoader();
-		fontLoader.load( 'fonts/optimer_bold.typeface.json', function ( response ) {
+		fontLoader.load( 'libs/fonts/optimer_bold.typeface.json', function ( response ) {
 			model.title = new THREE.Object3D();
 			model.title_index = getTextMesh(response, (idx + 1).toString(), false);
 			model.title_name = getTextMesh(response, characters[idx].name, true);

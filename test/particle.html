@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Effects Test - KujiKuji</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            overflow: hidden;
+            color: white;
+        }
+
+        .ui-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7);
+            min-width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
+            pointer-events: auto;
+        }
+
+        .controls h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls p {
+            margin-bottom: 20px;
+            color: #aaa;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .effect-category {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .effect-category:last-child {
+            border-bottom: none;
+        }
+
+        .category-title {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            padding: 14px 18px;
+            font-size: 0.95em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Confetti Effects */
+        .btn-confetti-burst {
+            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 100%);
+            color: white;
+        }
+
+        .btn-confetti-rain {
+            background: linear-gradient(135deg, #0ABDE3 0%, #05C46B 100%);
+            color: white;
+        }
+
+        .btn-confetti-celebration {
+            background: linear-gradient(135deg, #FFA502 0%, #FFD32A 100%);
+            color: #333;
+        }
+
+        /* Classic Effects */
+        .btn-selection {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #333;
+        }
+
+        .btn-firework {
+            background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+            color: white;
+        }
+
+        .btn-sparkle {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFE4B5 100%);
+            color: #333;
+        }
+
+        .btn-combined {
+            background: linear-gradient(135deg, #833471 0%, #F8B500 100%);
+            color: white;
+        }
+
+        /* Special Actions */
+        .btn-clear {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-random {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            min-width: 200px;
+            pointer-events: auto;
+        }
+
+        .stats h3 {
+            margin: 0 0 15px 0;
+            color: #4ECDC4;
+            font-size: 1.2em;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .stat-label {
+            color: #aaa;
+        }
+
+        .stat-value {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            max-width: 400px;
+            pointer-events: auto;
+        }
+
+        .info strong {
+            color: #4ECDC4;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Custom Scrollbar */
+        .controls::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .controls::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .controls::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .controls::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="ui-container">
+        <div class="controls">
+            <h2>🎨 Particle Effects Test</h2>
+            <p>다양한 파티클 효과를 테스트하고 비교해보세요!</p>
+            
+            <!-- Confetti Effects -->
+            <div class="effect-category">
+                <div class="category-title">🎊 Confetti Effects (NEW!)</div>
+                <div class="button-group">
+                    <button class="btn-confetti-burst" onclick="triggerConfettiBurst()">
+                        <span>💥 Confetti Burst</span>
+                    </button>
+                    
+                    <button class="btn-confetti-rain" onclick="triggerConfettiRain()">
+                        <span>🌧️ Confetti Rain</span>
+                    </button>
+                    
+                    <button class="btn-confetti-celebration" onclick="triggerConfettiCelebration()">
+                        <span>🎉 Full Celebration</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Classic Effects -->
+            <div class="effect-category">
+                <div class="category-title">✨ Classic Effects</div>
+                <div class="button-group">
+                    <button class="btn-selection" onclick="triggerSelection()">
+                        <span>⭐ Selection Effect</span>
+                    </button>
+                    
+                    <button class="btn-firework" onclick="triggerFirework()">
+                        <span>🎆 Firework Effect</span>
+                    </button>
+                    
+                    <button class="btn-sparkle" onclick="triggerSparkle()">
+                        <span>💫 Sparkle Effect</span>
+                    </button>
+                    
+                    <button class="btn-combined" onclick="triggerCombined()">
+                        <span>🌟 Combined Effect</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Special Actions -->
+            <div class="effect-category">
+                <div class="category-title">🎲 Special Actions</div>
+                <div class="button-group">
+                    <button class="btn-random" onclick="triggerRandom()">
+                        <span>🎰 Random Effect</span>
+                    </button>
+                    
+                    <button class="btn-clear" onclick="clearAll()">
+                        <span>🧹 Clear All</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <h3>📊 Statistics</h3>
+            <div class="stat-item">
+                <span class="stat-label">Effects Triggered:</span>
+                <span class="stat-value" id="effectCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Active Particles:</span>
+                <span class="stat-value" id="particleCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">FPS:</span>
+                <span class="stat-value" id="fps">60</span>
+            </div>
+        </div>
+
+        <div class="info">
+            <strong>💡 Tip:</strong> 여러 효과를 연속으로 클릭하여 중첩시켜보세요! 
+            마우스로 화면을 드래그하여 시점을 변경할 수 있습니다.
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "../libs/threejs/build/three.module.js",
+                "three/addons/": "../libs/threejs/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { ParticleEffects } from '../js/particles.js';
+
+        let scene, camera, renderer, controls;
+        let centerSphere;
+        let effectCount = 0;
+        let lastFrameTime = Date.now();
+        let frameCount = 0;
+        let fps = 60;
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 4, 10);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.target.set(0, 2, 0);
+            controls.minDistance = 3;
+            controls.maxDistance = 30;
+            controls.maxPolarAngle = Math.PI / 2 + 0.3;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 15, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -20;
+            directionalLight.shadow.camera.right = 20;
+            directionalLight.shadow.camera.top = 20;
+            directionalLight.shadow.camera.bottom = -20;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const pointLight1 = new THREE.PointLight(0x4ECDC4, 1, 20);
+            pointLight1.position.set(-5, 5, 5);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xFF6B9D, 1, 20);
+            pointLight2.position.set(5, 5, -5);
+            scene.add(pointLight2);
+
+            // Ground
+            const groundGeometry = new THREE.CircleGeometry(15, 64);
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1a2e,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Grid
+            const gridHelper = new THREE.PolarGridHelper(15, 16, 8, 64, 0x333344, 0x222233);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            // Center Sphere (파티클 발생 지점)
+            const sphereGeometry = new THREE.SphereGeometry(0.4, 32, 32);
+            const sphereMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff6b9d,
+                emissive: 0xff6b9d,
+                emissiveIntensity: 0.6,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            centerSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            centerSphere.position.y = 2;
+            centerSphere.castShadow = true;
+            scene.add(centerSphere);
+
+            // Sphere Glow
+            const glowGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff6b9d,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.BackSide
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            centerSphere.add(glow);
+
+            // Window resize
+            window.addEventListener('resize', onWindowResize);
+
+            // Start animation
+            animate();
+
+            // Start FPS counter
+            setInterval(updateFPS, 1000);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Sphere animation
+            const time = Date.now() * 0.001;
+            centerSphere.scale.setScalar(1 + Math.sin(time * 2) * 0.1);
+            centerSphere.rotation.y += 0.01;
+            centerSphere.rotation.x = Math.sin(time * 0.5) * 0.2;
+
+            // Update controls
+            controls.update();
+
+            // Update particle count (대략적인 추정)
+            const particleCount = scene.children.filter(child => 
+                child instanceof THREE.Points || 
+                (child instanceof THREE.Mesh && child.geometry instanceof THREE.PlaneGeometry)
+            ).length;
+            document.getElementById('particleCount').textContent = particleCount;
+
+            // Render
+            renderer.render(scene, camera);
+
+            // FPS tracking
+            frameCount++;
+        }
+
+        function updateFPS() {
+            const currentTime = Date.now();
+            const deltaTime = (currentTime - lastFrameTime) / 1000;
+            fps = Math.round(frameCount / deltaTime);
+            document.getElementById('fps').textContent = fps;
+            
+            frameCount = 0;
+            lastFrameTime = currentTime;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function incrementEffectCount() {
+            effectCount++;
+            document.getElementById('effectCount').textContent = effectCount;
+        }
+
+        // Confetti Effects
+        window.triggerConfettiBurst = function() {
+            const position = centerSphere.position.clone();
+            ParticleEffects.createConfettiBurst(scene, position, {
+                particleCount: 150,
+                explosionForce: 0.4,
+                duration: 4.5
+            });
+            incrementEffectCount();
+        };
+
+        window.triggerConfettiRain = function() {
+            ParticleEffects.createConfettiRain(scene, camera, {
+                particleCount: 120,
+                duration: 6,
+                fallSpeed: 0.025
+            });
+            incrementEffectCount();
+        };
+
+        window.triggerConfettiCelebration = function() {
+            const position = centerSphere.position.clone();
+            ParticleEffects.createConfettiCelebration(scene, position, camera);
+            incrementEffectCount();
+        };
+
+        // Classic Effects
+        window.triggerSelection = function() {
+            const position = centerSphere.position.clone();
+            ParticleEffects.createSelectionEffect(scene, position, {
+                particleCount: 180,
+                duration: 3
+            });
+            incrementEffectCount();
+        };
+
+        window.triggerFirework = function() {
+            const position = new THREE.Vector3(
+                centerSphere.position.x,
+                centerSphere.position.y + 2,
+                centerSphere.position.z
+            );
+            ParticleEffects.createFireworkEffect(scene, position, {
+                particleCount: 120,
+                explosionForce: 0.3,
+                duration: 2.5
+            });
+            incrementEffectCount();
+        };
+
+        window.triggerSparkle = function() {
+            const position = centerSphere.position.clone();
+            ParticleEffects.createSparkleEffect(scene, position, {
+                particleCount: 80,
+                duration: 2,
+                range: 2.5
+            });
+            incrementEffectCount();
+        };
+
+        window.triggerCombined = function() {
+            const position = centerSphere.position.clone();
+            ParticleEffects.createCombinedEffect(scene, position);
+            incrementEffectCount();
+        };
+
+        // Special Actions
+        window.triggerRandom = function() {
+            const effects = [
+                triggerConfettiBurst,
+                triggerConfettiRain,
+                triggerSelection,
+                triggerFirework,
+                triggerSparkle
+            ];
+            const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+            randomEffect();
+        };
+
+        window.clearAll = function() {
+            // Remove all particle systems and confetti pieces
+            const objectsToRemove = [];
+            scene.traverse((object) => {
+                if (object instanceof THREE.Points || 
+                    (object instanceof THREE.Mesh && 
+                     object !== centerSphere && 
+                     object !== ground &&
+                     object.geometry instanceof THREE.PlaneGeometry)) {
+                    objectsToRemove.push(object);
+                }
+            });
+
+            objectsToRemove.forEach(object => {
+                scene.remove(object);
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) object.material.dispose();
+            });
+
+            // Reset stats
+            effectCount = 0;
+            document.getElementById('effectCount').textContent = effectCount;
+        };
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

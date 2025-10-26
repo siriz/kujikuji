@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confetti Effect Demo - KujiKuji</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            min-width: 300px;
+        }
+
+        .controls h2 {
+            margin: 0 0 20px 0;
+            font-size: 1.5em;
+            color: #FFD700;
+        }
+
+        .controls p {
+            margin-bottom: 15px;
+            color: #ccc;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            padding: 15px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-burst {
+            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 100%);
+            color: white;
+        }
+
+        .btn-burst:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 107, 157, 0.5);
+        }
+
+        .btn-rain {
+            background: linear-gradient(135deg, #0ABDE3 0%, #05C46B 100%);
+            color: white;
+        }
+
+        .btn-rain:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(10, 189, 227, 0.5);
+        }
+
+        .btn-celebration {
+            background: linear-gradient(135deg, #FFA502 0%, #FFD32A 100%);
+            color: #333;
+        }
+
+        .btn-celebration:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 165, 2, 0.6);
+        }
+
+        .btn-combined {
+            background: linear-gradient(135deg, #833471 0%, #F8B500 100%);
+            color: white;
+        }
+
+        .btn-combined:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(131, 52, 113, 0.5);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h2>🎉 Confetti Effects Demo</h2>
+        <p>다양한 파티클 효과를 테스트해보세요!</p>
+        
+        <div class="button-group">
+            <button class="btn-burst" onclick="triggerBurst()">
+                💥 폭죽 터트리기
+            </button>
+            
+            <button class="btn-rain" onclick="triggerRain()">
+                🌧️ 하늘에서 떨어지기
+            </button>
+            
+            <button class="btn-celebration" onclick="triggerCelebration()">
+                🎊 풀 셀레브레이션
+            </button>
+            
+            <button class="btn-combined" onclick="triggerCombined()">
+                ✨ 기존 파티클 효과
+            </button>
+        </div>
+    </div>
+
+    <div class="info">
+        <strong>💡 Tip:</strong> 여러 번 클릭해서 효과를 중첩시켜보세요!
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "../libs/threejs/build/three.module.js",
+                "three/addons/": "../libs/threejs/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { ParticleEffects } from '../js/particles.js';
+
+        let scene, camera, renderer, controls;
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 3, 8);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.target.set(0, 2, 0);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2c3e50,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
+
+            // 중앙 표시 구체
+            const sphereGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+            const sphereMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff6b9d,
+                emissive: 0xff6b9d,
+                emissiveIntensity: 0.5,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            sphere.position.y = 2;
+            sphere.castShadow = true;
+            scene.add(sphere);
+
+            // 구체 펄스 애니메이션
+            function animateSphere() {
+                const time = Date.now() * 0.001;
+                sphere.scale.setScalar(1 + Math.sin(time * 2) * 0.1);
+                sphere.rotation.y += 0.01;
+                requestAnimationFrame(animateSphere);
+            }
+            animateSphere();
+
+            // Window resize
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // 전역 함수로 노출
+        window.triggerBurst = function() {
+            const position = new THREE.Vector3(0, 2, 0);
+            ParticleEffects.createConfettiBurst(scene, position, {
+                particleCount: 150,
+                explosionForce: 0.4,
+                duration: 4.5
+            });
+        };
+
+        window.triggerRain = function() {
+            ParticleEffects.createConfettiRain(scene, camera, {
+                particleCount: 120,
+                duration: 6,
+                fallSpeed: 0.025
+            });
+        };
+
+        window.triggerCelebration = function() {
+            const position = new THREE.Vector3(0, 2, 0);
+            ParticleEffects.createConfettiCelebration(scene, position, camera);
+        };
+
+        window.triggerCombined = function() {
+            const position = new THREE.Vector3(0, 2, 0);
+            ParticleEffects.createCombinedEffect(scene, position);
+        };
+
+        init();
+    </script>
+</body>
+</html>
