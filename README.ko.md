@@ -2,13 +2,13 @@
 
 **KUJI (くじ)** 는 일본어로 "추첨" 또는 "뽑기"를 의미합니다. 애니메이션 로봇 캐릭터, 시네마틱 효과, 부드러운 전환이 특징인 인터랙티브 3D 추첨 애플리케이션입니다.
 
+🎮 **[라이브 데모](https://siriz.github.io/kujikuji/)** | 📖 **다른 언어로 읽기**: [English](README.md) | [日本語](README.ja.md)
+
 ![컨셉 이미지](kuji_concept.png)
 *Google Gemini (Nano Banana)로 생성된 컨셉 이미지*
 
 ![WebGL](https://img.shields.io/badge/WebGL-990000?style=for-the-badge&logo=webgl&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-
-📖 **다른 언어로 읽기**: [English](README.md) | [日本語](README.ja.md)
 
 ## ✨ 주요 기능
 
